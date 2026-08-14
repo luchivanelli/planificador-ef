@@ -7,6 +7,8 @@ import BackLink from "@/components/BackLink";
 import { GenericToast } from "@/components/GenericToast";
 import AddClaseForm from "@/components/clase/AddClaseForm";
 import ClasesFiltradas from "@/components/clase/ClasesFiltradas";
+import UnidadForm from "@/components/planificacion y unidades/UnidadForm";
+import { aValorFecha } from "@/lib/schemas/common";
 
 export default async function UnidadDidacticaPage({
   params,
@@ -59,6 +61,27 @@ export default async function UnidadDidacticaPage({
         <BackLink href={`/cursos/${cursoId}`} title={`Volver a ${unidad.planificacion.curso.nombre}`}/>
         <h1 className="page-title">{unidad.titulo}</h1>
         <p className="text-sm text-slate-500 sm:text-base">{unidad.objetivo}</p>
+        <p className="mt-2 text-sm text-slate-500">
+          Del {new Date(unidad.fechaInicio).toLocaleDateString("es-AR")} al{" "}
+          {new Date(unidad.fechaFin).toLocaleDateString("es-AR")}
+        </p>
+
+        <details className="surface-card py-2 px-4 mt-4">
+          <summary className="cursor-pointer text-sm font-semibold text-slate-900 sm:text-base">
+            Editar unidad
+          </summary>
+          <UnidadForm
+            unidad={{
+              id: unidad.id,
+              titulo: unidad.titulo,
+              objetivo: unidad.objetivo,
+              fechaInicio: aValorFecha(unidad.fechaInicio),
+              fechaFin: aValorFecha(unidad.fechaFin),
+            }}
+            cursoId={cursoId}
+            planificacionId={unidad.planificacionId}
+          />
+        </details>
       </section>
 
       <ClasesFiltradas clases={clases} cursoId={cursoId} />

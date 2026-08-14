@@ -1,0 +1,489 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") 
+  directUrl = env("DIRECT_URL") 
+}
+
+// ==========================================
+// AUTENTICACIÓN
+// ==========================================
+
+model Docente {
+  id            String   @id @default(cuid())
+  nombre        String
+  apellido      String
+  email         String   @unique
+  passwordHash  String
+  provincia     String?
+  rol           RolDocente @default(docente)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sesiones            Sesion[]
+  institucionesVinculo DocenteInstitucion[]
+  cursos              Curso[]
+  planificaciones     Planificacion[]
+  juegosCreados       Juego[]
+  rubricas            Rubrica[]
+  indicadores Indicador[]
+}
+
+enum RolDocente {
+  docente
+  admin_institucion
+  directivo
+}
+
+model Sesion {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  docenteId String
+  docente   Docente  @relation(fields: [docenteId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([docenteId])
+}
+
+// ==========================================
+// INSTITUCIÓN
+// ==========================================
+
+model Institucion {
+  id         String   @id @default(cuid())
+  nombre     String
+  provincia  String
+  localidad  String
+  tipo       TipoInstitucion
+
+  docentes   DocenteInstitucion[]
+  cursos     Curso[]
+}
+
+enum TipoInstitucion {
+  publica
+  privada
+  gestion_social
+}
+
+model DocenteInstitucion {
+  docenteId        String
+  institucionId    String
+  rolEnInstitucion String?
+
+  docente     Docente     @relation(fields: [docenteId], references: [id], onDelete: Cascade)
+  institucion Institucion @relation(fields: [institucionId], references: [id], onDelete: Cascade)
+
+  @@id([docenteId, institucionId])
+}
+
+// ==========================================
+// CURSO Y ALUMNOS
+// ==========================================
+
+model Curso {
+  id            String   @id @default(cuid())
+  institucionId String
+  docenteId     String
+  nombre        String
+  nivel         Nivel
+  ciclo         Ciclo
+  anioLectivo   Int
+  turno         Turno
+
+  institucion     Institucion       @relation(fields: [institucionId], references: [id])
+  docente         Docente           @relation(fields: [docenteId], references: [id])
+  alumnos         CursoAlumno[]
+  planificaciones Planificacion[]
+  asistencias     Asistencia[]
+  informes        Informe[]
+
+  @@index([docenteId])
+  @@index([institucionId])
+}
+
+enum Nivel {
+  primaria
+  secundaria
+}
+
+enum Ciclo {
+  primer_ciclo
+  segundo_ciclo
+  septimo_anio
+  ciclo_basico
+  ciclo_orientado
+}
+
+enum Turno {
+  manana
+  tarde
+}
+
+model Alumno {
+  id                    String    @id @default(cuid())
+  nombre                String
+  apellido              String
+  dni                   String   @unique
+  fechaNacimiento       DateTime
+  contactoEmergencia    String?
+  observacionesMedicas  String?
+
+  cursos       CursoAlumno[]
+  aptosMedicos AptoMedico[]
+  asistencias  Asistencia[]
+  evaluaciones EvaluacionAlumno[]
+  informes     Informe[]
+}
+
+model CursoAlumno {
+  cursoId    String
+  alumnoId   String
+  fechaAlta  DateTime  @default(now())
+  fechaBaja  DateTime?
+
+  curso  Curso  @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  alumno Alumno @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+
+  @@id([cursoId, alumnoId])
+}
+
+model AptoMedico {
+  id              String    @id @default(cuid())
+  alumnoId        String
+  tipo            TipoAptoMedico
+  fechaInicio     DateTime
+  fechaFin        DateTime?
+  restricciones   String?
+  adjuntoUrl      String?
+
+  alumno Alumno @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+
+  @@index([alumnoId])
+}
+
+enum TipoAptoMedico {
+  apto_fisico
+  lesion
+  condicion_cronica
+}
+
+// ==========================================
+// CURRÍCULUM (NAP)
+// ==========================================
+
+model EjeNap {
+  id          String @id @default(cuid())
+  nivel       Nivel
+  ciclo       Ciclo
+  nombre      String
+  descripcion String?
+
+  clasesDiarias   ClaseDiaria[]
+  juegos          Juego[]
+}
+
+// ==========================================
+// PLANIFICACIÓN
+// ==========================================
+
+model Planificacion {
+  id        String             @id @default(cuid())
+  docenteId String
+  cursoId   String
+  anio      Int
+  objetivos String?
+
+  docente  Docente           @relation(fields: [docenteId], references: [id])
+  curso    Curso             @relation(fields: [cursoId], references: [id])
+  unidades UnidadDidactica[]
+
+  @@unique([docenteId, cursoId, anio])
+  @@index([cursoId])
+  @@index([docenteId])
+}
+
+model UnidadDidactica {
+  id              String   @id @default(cuid())
+  planificacionId String
+  titulo          String
+  objetivo        String?
+  fechaInicio     DateTime
+  fechaFin        DateTime
+
+  planificacion Planificacion @relation(fields: [planificacionId], references: [id], onDelete: Cascade)
+  clases        ClaseDiaria[]
+
+  @@index([planificacionId])
+}
+
+model ClaseDiaria {
+  id                    String             @id @default(cuid())
+  unidadDidacticaId     String
+  fecha                 DateTime
+  horaInicio            String?
+  horaFin               String?
+  objetivoClase         String?
+  temaClase             String?
+  contenidosClase       String?
+  // El eje es obligatorio, pero puede ser uno de la tabla `EjeNap` o uno escrito
+  // a mano por la docente: por eso el FK es opcional y va acompañado de `ejeOtro`.
+  // Que haya exactamente uno de los dos lo garantiza `claseSchema`.
+  ejeNapId              String?
+  ejeOtro               String?
+  espacioRequerido      EspacioTipo?
+  alternativaClima      String?
+  estado                EstadoClase        @default(planificada)
+  motivoCancelacion     MotivoCancelacion?
+  motivoCancelacionOtro String?
+  reprogramadaAId       String?            @unique
+
+  unidadDidactica UnidadDidactica  @relation(fields: [unidadDidacticaId], references: [id], onDelete: Cascade)
+  ejeNap          EjeNap?          @relation(fields: [ejeNapId], references: [id])
+  reprogramadaA   ClaseDiaria?     @relation("Reprogramacion", fields: [reprogramadaAId], references: [id])
+  reprogramadaDe  ClaseDiaria?     @relation("Reprogramacion")
+  actividades     ClaseActividad[]
+  asistencias     Asistencia[]
+  evaluaciones    EvaluacionAlumno[]
+  evaluacionesIndicadores EvaluacionIndicador[]
+
+  @@index([unidadDidacticaId])
+  // La barrida que cierra las clases vencidas filtra por estado + fecha.
+  @@index([estado, fecha])
+}
+
+
+enum EspacioTipo {
+  patio
+  gimnasio
+  cancha_externa
+}
+
+enum EstadoClase {
+  planificada
+  dictada
+  // No se dio y no se canceló con antelación (docente ausente, paro, etc.).
+  suspendida
+  cancelada
+  // Cancelada con una clase de reemplazo: el reemplazo cuelga de `reprogramadaAId`.
+  reprogramada
+}
+
+enum MotivoCancelacion {
+  clima
+  feriado_suspension
+  ausencia_docente
+  otro
+}
+
+model ClaseActividad {
+  id                 String   @id @default(cuid())
+  claseDiariaId      String
+  juegoId            String?
+  orden              Int
+  duracionMinutos    Int
+  duracionRealMinutos Int?
+  tipoBloque         TipoBloque
+
+  claseDiaria ClaseDiaria @relation(fields: [claseDiariaId], references: [id], onDelete: Cascade)
+  juego       Juego?      @relation(fields: [juegoId], references: [id])
+
+  @@index([claseDiariaId])
+}
+
+enum TipoBloque {
+  entrada_calor
+  desarrollo
+  vuelta_calma
+}
+
+// ==========================================
+// BANCO DE JUEGOS
+// ==========================================
+
+model Juego {
+  id                     String   @id @default(cuid())
+  nombre                 String
+  descripcion            String?
+  autorId                String?
+  rangoEtario            RangoEtario
+  categoria              CategoriaJuego
+  estrategia             EstrategiaJuego
+  ejeNapId               String?
+  jugadoresMin           Int?
+  jugadoresMax           Int?
+  espacioRequerido       EspacioTipo?
+  materiales             String[]
+  materialesAlternativos String?
+
+  autor       Docente?         @relation(fields: [autorId], references: [id])
+  ejeNap      EjeNap?          @relation(fields: [ejeNapId], references: [id])
+  actividades ClaseActividad[]
+
+  @@index([rangoEtario])
+  @@index([categoria])
+  @@index([estrategia])
+}
+
+enum RangoEtario {
+  de_3_a_5
+  de_6_a_8
+  de_9_a_12
+  de_12_a_15
+  de_15_o_mas
+}
+
+enum CategoriaJuego {
+  deportivo
+  expresion_corporal
+  cooperativo
+  vida_naturaleza
+}
+
+enum EstrategiaJuego {
+  mando_directo
+  asignacion_de_tareas
+  ensenianza_reciproca
+  descubrimiento_guiado
+  resolucion_de_problemas
+}
+
+// ==========================================
+// ASISTENCIA
+// ==========================================
+
+model Asistencia {
+  id            String   @id @default(cuid())
+  cursoId       String
+  alumnoId      String
+  claseDiariaId String?
+  fecha         DateTime
+  estado        EstadoAsistencia
+  observacion   String?
+
+  curso       Curso        @relation(fields: [cursoId], references: [id])
+  alumno      Alumno       @relation(fields: [alumnoId], references: [id])
+  claseDiaria ClaseDiaria? @relation(fields: [claseDiariaId], references: [id])
+
+  @@unique([cursoId, alumnoId, fecha, claseDiariaId])
+  @@index([alumnoId])
+  @@index([claseDiariaId])
+}
+
+enum EstadoAsistencia {
+  presente
+  ausente
+  tarde
+  SAF
+}
+
+// ==========================================
+// EVALUACIÓN
+// ==========================================
+
+model Rubrica {
+  id        String @id @default(cuid())
+  docenteId String
+  nombre    String
+  nivel     Nivel
+  ciclo     Ciclo
+
+  docente     Docente            @relation(fields: [docenteId], references: [id])
+  criterios   RubricaCriterio[]
+  evaluaciones EvaluacionAlumno[]
+}
+
+model RubricaCriterio {
+  id        String @id @default(cuid())
+  rubricaId String
+  nombre    String
+
+  rubrica Rubrica @relation(fields: [rubricaId], references: [id], onDelete: Cascade)
+  detalles EvaluacionDetalle[]
+}
+
+model EvaluacionAlumno {
+  id                 String   @id @default(cuid())
+  alumnoId           String
+  claseId            String
+  rubricaId          String
+  observacionDocente  String?
+
+  alumno   Alumno   @relation(fields: [alumnoId], references: [id])
+  clase    ClaseDiaria    @relation(fields: [claseId], references: [id])
+  rubrica  Rubrica  @relation(fields: [rubricaId], references: [id])
+  detalles EvaluacionDetalle[]
+
+  @@unique([alumnoId, claseId, rubricaId])
+  @@index([alumnoId])
+  @@index([claseId])
+}
+
+model EvaluacionDetalle {
+  evaluacionId String
+  criterioId   String
+  valor        Int
+
+  evaluacion EvaluacionAlumno @relation(fields: [evaluacionId],references: [id],onDelete: Cascade)
+  criterio RubricaCriterio @relation(fields: [criterioId], references: [id])
+
+  @@id([evaluacionId, criterioId])
+}
+
+enum ValorIndicador {
+  NO
+  A_VECES
+  SI
+}
+
+model EvaluacionIndicador {
+  id          String        @id @default(cuid())
+  indicadorId String
+  claseId     String
+  valor       ValorIndicador
+
+  indicador Indicador @relation(fields: [indicadorId],references: [id],onDelete: Cascade)
+
+  clase ClaseDiaria @relation(fields: [claseId],references: [id])
+
+  @@unique([indicadorId, claseId])
+  @@index([claseId])
+}
+
+model Indicador {
+  id        String @id @default(cuid())
+  docenteId String
+  titulo    String
+
+  docente    Docente              @relation(fields: [docenteId], references: [id])
+  evaluaciones EvaluacionIndicador[]
+}
+
+// ==========================================
+// INFORMES
+// ==========================================
+
+model Informe {
+  id            String    @id @default(cuid())
+  tipo          TipoInforme
+  cursoId       String?
+  alumnoId      String?
+  periodo       String
+  contenidoJson Json?
+  pdfUrl        String?
+  generadoEn    DateTime  @default(now())
+
+  curso  Curso?  @relation(fields: [cursoId], references: [id])
+  alumno Alumno? @relation(fields: [alumnoId], references: [id])
+}
+
+enum TipoInforme {
+  individual
+  grupal
+  institucional
+}
+

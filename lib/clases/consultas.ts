@@ -1,13 +1,6 @@
 import type { Ciclo, Nivel } from "@prisma/client";
 import { db } from "@/lib/db";
-import { rangoDelDia } from "@/lib/schemas/common";
-
-/** La hora local actual como "HH:MM", comparable contra la columna `horaFin`. */
-function horaDeReloj(ahora: Date) {
-  const hh = String(ahora.getHours()).padStart(2, "0");
-  const mm = String(ahora.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
-}
+import { horaEnZona, rangoDelDia } from "@/lib/schemas/common";
 
 /**
  * "El horario ya pasó", resuelto entero en la base.
@@ -21,7 +14,7 @@ function horarioVencido(ahora: Date) {
   const { inicio: hoyInicio } = rangoDelDia(ahora);
   return [
     { fecha: { lt: hoyInicio } },
-    { fecha: hoyInicio, horaFin: { lt: horaDeReloj(ahora) } },
+    { fecha: hoyInicio, horaFin: { lt: horaEnZona(ahora) } },
   ];
 }
 

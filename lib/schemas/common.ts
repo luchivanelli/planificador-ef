@@ -114,15 +114,54 @@ export const listaOpcional = (etiqueta: string, max = 2000) =>
 export const aFecha = (valor: string) => new Date(`${valor}T00:00:00.000Z`);
 
 /**
+ * El huso horario del colegio, fijo y explícito.
+ *
+ * Todo lo que dependa de "qué día es hoy" o "qué hora es" tiene que salir de
+ * acá y no de `getDate()`/`getHours()`: esos leen el reloj del proceso, que en
+ * desarrollo es el de la docente pero en el servidor de producción es UTC. Con
+ * 3 horas de diferencia una clase de 21 a 22 aparecía terminada desde las 19.
+ */
+export const ZONA_HORARIA = "America/Argentina/Buenos_Aires";
+
+// `en-CA` da el año, el mes y el día ya en formato ISO; `h23` evita que la
+// medianoche salga como "24:00" (lo que hace `hour12: false` en algunas ICU).
+const PARTES_EN_ZONA = new Intl.DateTimeFormat("en-CA", {
+  timeZone: ZONA_HORARIA,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+const partesEnZona = (referencia: Date) => {
+  const partes = new Map(
+    PARTES_EN_ZONA.formatToParts(referencia).map(({ type, value }) => [type, value])
+  );
+  return {
+    dia: `${partes.get("year")}-${partes.get("month")}-${partes.get("day")}`,
+    hora: `${partes.get("hour")}:${partes.get("minute")}`,
+  };
+};
+
+/** El día del calendario en curso, como "AAAA-MM-DD". */
+export const diaEnZona = (referencia: Date = new Date()) => partesEnZona(referencia).dia;
+
+/**
+ * La hora del reloj de pared, como "HH:MM" con cero adelante: el mismo formato
+ * en que se cargan `horaInicio` y `horaFin`, así se comparan directo.
+ */
+export const horaEnZona = (referencia: Date = new Date()) => partesEnZona(referencia).hora;
+
+/**
  * Rango `[inicio, fin)` que cubre un día entero con la misma convención que
- * `aFecha` (medianoche UTC), tomando el día del calendario local.
- * Armarlo con `setHours(0, 0, 0, 0)` corre el rango según el huso horario:
+ * `aFecha` (medianoche UTC), tomando el día del calendario en `ZONA_HORARIA`.
+ * Armarlo con `setHours(0, 0, 0, 0)` corre el rango según el huso del proceso:
  * en UTC-3 empezaría a las 03:00 UTC y se saltearía las clases de ese día.
  */
 export const rangoDelDia = (referencia: Date = new Date()) => {
-  const inicio = new Date(
-    Date.UTC(referencia.getFullYear(), referencia.getMonth(), referencia.getDate())
-  );
+  const inicio = aFecha(diaEnZona(referencia));
   const fin = new Date(inicio);
   fin.setUTCDate(fin.getUTCDate() + 1);
   return { inicio, fin };

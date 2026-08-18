@@ -88,7 +88,7 @@ export default async function EvaluacionPage({
             {alumnos.length === 0 && (
               <p className="text-sm text-slate-500 my-2">Este curso no tiene alumnos cargados.</p>
             )}
-            <div className="space-y-2 py-2 overflow-y-auto max-h-[300px]">
+            <div className="space-y-2 my-2 overflow-y-auto max-h-[350px]">
               {alumnos.map((alumno) => (
                 <EvaluacionAlumno
                   key={alumno.id}

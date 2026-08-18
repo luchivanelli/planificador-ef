@@ -5,7 +5,7 @@ import { requerirDocente } from "@/lib/auth";
 import { marcarClasesDictadas, clasesPendientesDeAsistencia } from "@/lib/clases/consultas";
 import { presentacionClase } from "@/lib/clases/estado";
 import { cambiarEstadoClase } from "@/lib/actions/clases.actions";
-import { aFechaLegible, rangoDelDia, resumenLista } from "@/lib/schemas/common";
+import { ZONA_HORARIA, aFechaLegible, rangoDelDia, resumenLista } from "@/lib/schemas/common";
 import FormSubmit from "@/components/FormSubmit";
 import ListaItems from "@/components/ListaItems";
 import type { Nivel, Turno } from "@prisma/client";
@@ -61,6 +61,8 @@ export default async function DashboardPage() {
             day: "numeric",
             month: "long",
             year: "numeric",
+            // El servidor corre en UTC: sin esto, de noche muestra el día siguiente.
+            timeZone: ZONA_HORARIA,
           })}
         </p>
       </section>
@@ -77,7 +79,7 @@ export default async function DashboardPage() {
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
           {clasesHoy.map((clase) => {
             const presentacion = presentacionClase(
               { ...clase, tieneAsistencia: clase._count.asistencias > 0 },
@@ -99,10 +101,10 @@ export default async function DashboardPage() {
                 </div>
               <h2 className="text-lg font-bold text-slate-900">{cursoDeLaClase.nombre} {cursoDeLaClase.nivel == "primaria" ? "Primaria" : "Secundaria"}</h2>
                 <div className="p-4 border-1 border-dashed border-slate-200">
-                  <h3 className="text-xs font-semibold text-slate-500">ACTIVIDAD DEL DIA</h3>
+                  <h3 className="text-xs font-semibold text-slate-500">TEMA DEL DIA</h3>
                   <ListaItems
-                    valor={clase.objetivoClase}
-                    vacio="Sin objetivo definido"
+                    valor={clase.temaClase}
+                    vacio="Sin tema definido"
                     className="text-sm sm:text-base text-slate-900 font-semibold mt-1"
                   />
                   <p className="text-xs text-slate-500">Unidad: {clase.unidadDidactica.titulo}</p>

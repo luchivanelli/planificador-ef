@@ -33,9 +33,6 @@ export default async function CursoPage({
     orderBy: { anio: "desc" }
   });
 
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-
   const alumnos = curso.alumnos.map((ca) => ca.alumno);
 
   return (

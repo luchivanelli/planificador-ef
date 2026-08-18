@@ -1,5 +1,5 @@
 import type { EstadoClase } from "@prisma/client";
-import { rangoDelDia } from "@/lib/schemas/common";
+import { horaEnZona, rangoDelDia } from "@/lib/schemas/common";
 
 // ==========================================
 // EL MOMENTO: dónde está la clase en el reloj
@@ -26,7 +26,8 @@ function enMinutos(hora: string | null) {
 
 /**
  * `fecha` se guarda a medianoche UTC (ver `aFecha`) y los horarios son hora de
- * reloj local: por eso el día se compara en UTC y la hora contra la local.
+ * reloj del colegio: por eso el día se compara en UTC y la hora contra
+ * `horaEnZona`, nunca contra `ahora.getHours()` (ver `ZONA_HORARIA`).
  * Sin horarios cargados una clase de hoy nunca llega a "terminada": no hay
  * forma de saberlo, y recién pasa a estarlo cuando cambia el día.
  */
@@ -37,7 +38,8 @@ export function faseHoraria(clase: ClaseConHorario, ahora: Date = new Date()): F
   if (dia < hoyInicio.getTime()) return "terminada";
   if (dia > hoyInicio.getTime()) return "por_venir";
 
-  const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
+  // `horaEnZona` siempre devuelve un "HH:MM" válido: el `?? 0` es sólo tipado.
+  const minutosAhora = enMinutos(horaEnZona(ahora)) ?? 0;
   const fin = enMinutos(clase.horaFin);
   const inicio = enMinutos(clase.horaInicio);
 

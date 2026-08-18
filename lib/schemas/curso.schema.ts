@@ -1,12 +1,6 @@
 import { z } from "zod";
 import { CICLOS_POR_NIVEL } from "@/lib/types";
-import {
-  enteroRequerido,
-  fechaRequerida,
-  textoOpcional,
-  textoRequerido,
-  textoRequeridoConFormato,
-} from "./common";
+import { enteroRequerido, listaOpcional, textoOpcional, textoRequerido } from "./common";
 
 export const nivelSchema = z.enum(["primaria", "secundaria"], { error: "Elegí un nivel" });
 
@@ -29,26 +23,23 @@ export const cursoSchema = z
     { error: "El ciclo no corresponde al nivel elegido", path: ["ciclo"] }
   );
 
-const hoy = () => new Date().toISOString().slice(0, 10);
-
 export const alumnoSchema = z.object({
   nombre: textoRequerido("El nombre", 60),
   apellido: textoRequerido("El apellido", 60),
-  fechaNacimiento: fechaRequerida("La fecha de nacimiento")
-    .refine((valor) => valor >= "1900-01-01", "La fecha de nacimiento no es válida")
-    .refine((valor) => valor <= hoy(), "La fecha de nacimiento no puede ser futura"),
-  dni: textoRequeridoConFormato(
-    "El DNI",
-    /^\d{7,9}$/,
-    "El DNI debe tener entre 7 y 9 números, sin puntos"
-  ),
   contactoEmergencia: textoOpcional("El contacto de emergencia", 120),
 });
 
-export const observacionesMedicasSchema = z.object({
-  observacionesMedicas: textoOpcional("La observación médica", 2000),
+export const observacionesAlumnoSchema = z.object({
+  // Lista: un ítem por línea (ver `listaOpcional`).
+  observaciones: listaOpcional("Las observaciones", 2000),
+});
+
+export const diagnosticoGrupalSchema = z.object({
+  // Lista: un ítem por línea (ver `listaOpcional`).
+  diagnosticoGrupal: listaOpcional("El diagnóstico grupal", 2000),
 });
 
 export type CursoInput = z.infer<typeof cursoSchema>;
 export type AlumnoInput = z.infer<typeof alumnoSchema>;
-export type ObservacionesMedicasInput = z.infer<typeof observacionesMedicasSchema>;
+export type ObservacionesAlumnoInput = z.infer<typeof observacionesAlumnoSchema>;
+export type DiagnosticoGrupalInput = z.infer<typeof diagnosticoGrupalSchema>;

@@ -3,8 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requerirDocente, verificarPropietarioCurso } from "@/lib/auth";
-import { alumnoSchema, cursoSchema, observacionesMedicasSchema } from "@/lib/schemas/curso.schema";
-import { aFecha, aTextoONull } from "@/lib/schemas/common";
+import {
+  alumnoSchema,
+  cursoSchema,
+  diagnosticoGrupalSchema,
+  observacionesAlumnoSchema,
+} from "@/lib/schemas/curso.schema";
+import { aTextoONull } from "@/lib/schemas/common";
 import {
   exito,
   fallo,
@@ -71,35 +76,19 @@ export async function agregarAlumno(cursoId: string, input: unknown): Promise<Re
   const validado = validarPayload(alumnoSchema, input);
   if (!validado.ok) return validado;
 
-  const { nombre, apellido, fechaNacimiento, dni, contactoEmergencia } = validado.data;
+  const { nombre, apellido, contactoEmergencia } = validado.data;
 
-  const existente = await db.alumno.findFirst({ where: { dni } });
-  if (existente) {
-    return fallo("Ya existe un alumno con ese DNI", { dni: "Ya existe un alumno con ese DNI" });
-  }
+  const alumno = await db.alumno.create({
+    data: {
+      nombre,
+      apellido,
+      contactoEmergencia: aTextoONull(contactoEmergencia),
+    },
+  });
 
-  try {
-    const alumno = await db.alumno.create({
-      data: {
-        nombre,
-        apellido,
-        fechaNacimiento: aFecha(fechaNacimiento),
-        dni,
-        contactoEmergencia: aTextoONull(contactoEmergencia),
-      },
-    });
-
-    await db.cursoAlumno.create({
-      data: { cursoId, alumnoId: alumno.id },
-    });
-  } catch (err) {
-    // El índice único de DNI puede saltar igual si dos altas llegan a la vez.
-    const e = err as { code?: string };
-    if (e?.code === "P2002") {
-      return fallo("Ya existe un alumno con ese DNI", { dni: "Ya existe un alumno con ese DNI" });
-    }
-    throw err;
-  }
+  await db.cursoAlumno.create({
+    data: { cursoId, alumnoId: alumno.id },
+  });
 
   revalidatePath(`/cursos/${cursoId}`);
   return exito();
@@ -121,26 +110,16 @@ export async function actualizarAlumno(
   const validado = validarPayload(alumnoSchema, input);
   if (!validado.ok) return validado;
 
-  const { nombre, apellido, fechaNacimiento, dni, contactoEmergencia } = validado.data;
+  const { nombre, apellido, contactoEmergencia } = validado.data;
 
-  try {
-    await db.alumno.update({
-      where: { id: alumnoId },
-      data: {
-        nombre,
-        apellido,
-        fechaNacimiento: aFecha(fechaNacimiento),
-        dni,
-        contactoEmergencia: aTextoONull(contactoEmergencia),
-      },
-    });
-  } catch (err) {
-    const e = err as { code?: string };
-    if (e?.code === "P2002") {
-      return fallo("Ya existe un alumno con ese DNI", { dni: "Ya existe un alumno con ese DNI" });
-    }
-    throw err;
-  }
+  await db.alumno.update({
+    where: { id: alumnoId },
+    data: {
+      nombre,
+      apellido,
+      contactoEmergencia: aTextoONull(contactoEmergencia),
+    },
+  });
 
   revalidatePath(`/cursos/${cursoId}`);
   return exito();
@@ -161,7 +140,7 @@ export async function eliminarAlumno(alumnoId: string, cursoId: string) {
   revalidatePath(`/cursos/${cursoId}`);
 }
 
-export async function guardarObservacionesMedicas(
+export async function guardarObservacionesAlumno(
   alumnoId: string,
   cursoId: string,
   input: unknown
@@ -174,14 +153,38 @@ export async function guardarObservacionesMedicas(
     return fallo(mensajeDeError(error, "No tenés permiso sobre este curso"));
   }
 
-  const validado = validarPayload(observacionesMedicasSchema, input);
+  const validado = validarPayload(observacionesAlumnoSchema, input);
   if (!validado.ok) return validado;
 
   await db.alumno.update({
     where: { id: alumnoId },
     data: {
-      observacionesMedicas: aTextoONull(validado.data.observacionesMedicas),
+      observaciones: aTextoONull(validado.data.observaciones),
     },
+  });
+
+  revalidatePath(`/cursos/${cursoId}`);
+  return exito();
+}
+
+export async function guardarDiagnosticoGrupal(
+  cursoId: string,
+  input: unknown
+): Promise<ResultadoAccion> {
+  const docente = await requerirDocente();
+
+  try {
+    await verificarPropietarioCurso(cursoId, docente.id);
+  } catch (error) {
+    return fallo(mensajeDeError(error, "No tenés permiso sobre este curso"));
+  }
+
+  const validado = validarPayload(diagnosticoGrupalSchema, input);
+  if (!validado.ok) return validado;
+
+  await db.curso.update({
+    where: { id: cursoId },
+    data: { diagnosticoGrupal: aTextoONull(validado.data.diagnosticoGrupal) },
   });
 
   revalidatePath(`/cursos/${cursoId}`);

@@ -9,7 +9,6 @@ import type {
   MotivoCancelacion,
   TipoBloque,
   EspacioTipo,
-  ValorIndicador,
 } from "@prisma/client";
 
 export const NIVELES: { value: Nivel; label: string }[] = [
@@ -108,13 +107,7 @@ export const ESPACIOS: { value: EspacioTipo; label: string }[] = [
   { value: "cancha_externa", label: "Cancha externa" },
 ];
 
-/** Los indicadores se evalúan para todo el grupo, no alumno por alumno. */
-export const VALORES_INDICADOR: { value: ValorIndicador; label: string }[] = [
-  { value: "SI", label: "Sí" },
-  { value: "A_VECES", label: "A veces" },
-  { value: "NO", label: "No" },
-];
-
+/** Escala con la que se puntúa cada indicador de la rúbrica, alumno por alumno. */
 export const NIVELES_LOGRO = [1,2,3,4,5,6,7,8,9,10] as const;
 
 export type NivelDeLogro = (typeof NIVELES_LOGRO)[number];

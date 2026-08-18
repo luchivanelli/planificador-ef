@@ -1,17 +1,15 @@
 "use client";
 import React, { useMemo, useState } from "react";
-import { Info, ClipboardPlus } from "lucide-react";
+import { Info, FileText } from "lucide-react";
 import EditarAlumnoForm from "@/components/alumno/EditarAlumnoForm";
-import ObservacionMedicaForm from "@/components/alumno/ObservacionMedicaForm";
+import ObservacionesAlumnoForm from "@/components/alumno/ObservacionesAlumnoForm";
 
 type Alumno = {
   id: string;
   nombre: string;
   apellido: string;
-  dni?: string | null;
-  fechaNacimiento: string;
   contactoEmergencia?: string | null;
-  observacionesMedicas?: string | null;
+  observaciones?: string | null;
 };
 
 export default function AlumnosSearch({ alumnos, cursoId }: { alumnos: Alumno[]; cursoId: string }) {
@@ -78,9 +76,9 @@ export default function AlumnosSearch({ alumnos, cursoId }: { alumnos: Alumno[];
                   type="button"
                   className="flex items-center justify-center rounded-full p-1 hover:bg-slate-100"
                   onClick={() => setSelectedObservacionId((current) => (current === a.id ? null : a.id))}
-                  aria-label="Agregar observación médica"
+                  aria-label="Seguimiento y observaciones del alumno"
                 >
-                  <ClipboardPlus className="h-3.5 sm:h-4.5 w-3.5 sm:w-4.5 text-[#0f63ff]" />
+                  <FileText className="h-3.5 sm:h-4.5 w-3.5 sm:w-4.5 text-[#0f63ff]" />
                 </button>
               </div>
             </li>
@@ -104,8 +102,8 @@ export default function AlumnosSearch({ alumnos, cursoId }: { alumnos: Alumno[];
       )}
 
       {selectedObservacion && (
-        <ObservacionMedicaForm
-          key={`observacion-${selectedObservacion.id}`}
+        <ObservacionesAlumnoForm
+          key={`observaciones-${selectedObservacion.id}`}
           alumno={selectedObservacion}
           cursoId={cursoId}
           onCerrar={() => setSelectedObservacionId(null)}

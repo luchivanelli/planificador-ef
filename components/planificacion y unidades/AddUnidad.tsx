@@ -7,6 +7,8 @@ import { FilePlus2 } from "lucide-react";
 import BackLink from "@/components/BackLink";
 import { Campo, ErrorGeneral } from "@/components/form/Campo";
 import BotonEnviar from "@/components/form/BotonEnviar";
+import TextareaLista from "@/components/form/TextareaLista";
+import { AYUDA_LISTA } from "@/lib/form/ayudas";
 import { unidadDidacticaSchema } from "@/lib/schemas/planificacion.schema";
 import { enviarFormulario } from "@/lib/form/enviar-formulario";
 import { crearUnidadDidactica } from "@/lib/actions/unidadDidactica.actions";
@@ -29,6 +31,7 @@ export default function AddUnidadForm({ planificacionId, cursoId, planificacion 
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(unidadDidacticaSchema),
@@ -67,8 +70,8 @@ export default function AddUnidadForm({ planificacionId, cursoId, planificacion 
               className="input-shell"
             />
           </Campo>
-          <Campo label="Objetivos" error={errors.objetivo?.message}>
-            <textarea {...register("objetivo")} rows={2} className="input-shell min-h-[92px] w-full" />
+          <Campo label="Objetivos" error={errors.objetivo?.message} hint={AYUDA_LISTA}>
+            <TextareaLista control={control} name="objetivo" className="input-shell min-h-[92px] w-full" />
           </Campo>
           <div className="grid gap-3 sm:grid-cols-2">
             <Campo label="Fecha de inicio" error={errors.fechaInicio?.message}>

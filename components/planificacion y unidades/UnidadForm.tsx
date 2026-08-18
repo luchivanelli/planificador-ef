@@ -6,9 +6,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Campo, ErrorGeneral } from "@/components/form/Campo";
 import BotonEnviar from "@/components/form/BotonEnviar";
+import TextareaLista from "@/components/form/TextareaLista";
+import { AYUDA_LISTA } from "@/lib/form/ayudas";
 import { unidadDidacticaSchema } from "@/lib/schemas/planificacion.schema";
 import { aValorFecha } from "@/lib/schemas/common";
 import { enviarFormulario } from "@/lib/form/enviar-formulario";
+import { cerrarDetails } from "@/lib/form/cerrar-details";
 import { actualizarUnidadDidactica } from "@/lib/actions/unidadDidactica.actions";
 
 export type UnidadEditable = {
@@ -31,10 +34,12 @@ export default function UnidadForm({
   planificacionId: string;
 }) {
   const router = useRouter();
+  const formId = `unidad-form-${unidad.id}`;
   const {
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(unidadDidacticaSchema),
@@ -53,18 +58,19 @@ export default function UnidadForm({
       errorInesperado: "No se pudieron guardar los cambios",
       onExito: () => {
         toast.success("Unidad actualizada");
+        cerrarDetails(formId);
         router.refresh();
       },
     })
   );
 
   return (
-    <form onSubmit={onSubmit} noValidate className="mt-3 space-y-3">
+    <form id={formId} onSubmit={onSubmit} noValidate className="mt-3 space-y-3">
       <Campo label="Título" error={errors.titulo?.message}>
         <input {...register("titulo")} className="input-shell w-full" />
       </Campo>
-      <Campo label="Objetivos" error={errors.objetivo?.message}>
-        <textarea {...register("objetivo")} rows={2} className="input-shell min-h-[92px] w-full" />
+      <Campo label="Objetivos" error={errors.objetivo?.message} hint={AYUDA_LISTA}>
+        <TextareaLista control={control} name="objetivo" className="input-shell min-h-[92px] w-full" />
       </Campo>
       <div className="grid gap-3 sm:grid-cols-2">
         <Campo label="Fecha de inicio" error={errors.fechaInicio?.message}>

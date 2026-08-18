@@ -7,8 +7,11 @@ import { PlusCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Campo, ErrorGeneral } from "@/components/form/Campo";
 import BotonEnviar from "@/components/form/BotonEnviar";
+import TextareaLista from "@/components/form/TextareaLista";
+import { AYUDA_LISTA } from "@/lib/form/ayudas";
 import { claseSchema, type ClaseFormValues } from "@/lib/schemas/clase.schema";
 import { enviarFormulario } from "@/lib/form/enviar-formulario";
+import { cerrarDetails } from "@/lib/form/cerrar-details";
 import { crearClase } from "@/lib/actions/clases.actions";
 import { EJE_OTRO, type OpcionEje } from "@/lib/types";
 
@@ -19,7 +22,8 @@ const VALORES_INICIALES: ClaseFormValues = {
   ejeNapId: "",
   ejeOtro: "",
   objetivoClase: "",
-  alternativaClima: "",
+  temaClase: "",
+  contenidosClase: "",
 };
 
 export default function AddClaseForm({
@@ -32,6 +36,7 @@ export default function AddClaseForm({
   ejes: OpcionEje[];
 }) {
   const router = useRouter();
+  const formId = `agregar-clase-form-${unidadId}`;
   const {
     register,
     handleSubmit,
@@ -56,13 +61,14 @@ export default function AddClaseForm({
       onExito: () => {
         toast.success("Clase agregada");
         reset(VALORES_INICIALES);
+        cerrarDetails(formId);
         router.refresh();
       },
     })
   );
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-2 mt-4">
+    <form id={formId} onSubmit={onSubmit} noValidate className="space-y-2 mt-4">
       <div className="flex flex-wrap gap-2">
         <div className="grid grid-cols-2 sm:grid-cols-3 w-full gap-2">
           <Campo label="Fecha" error={errors.fecha?.message} className="w-full col-span-2 sm:col-span-1">
@@ -99,21 +105,24 @@ export default function AddClaseForm({
             />
           </Campo>
         )}
-        <Campo label="Objetivo de la clase" error={errors.objetivoClase?.message} className="w-full">
-          <textarea
-            {...register("objetivoClase")}
-            rows={2}
-            placeholder=""
-            className="input-shell w-full"
-          />
+        <Campo label="Tema" error={errors.temaClase?.message} hint={AYUDA_LISTA} className="w-full">
+          <TextareaLista control={control} name="temaClase" />
         </Campo>
-        <Campo label="Alternativa por clima" error={errors.alternativaClima?.message} className="w-full">
-          <textarea
-            {...register("alternativaClima")}
-            rows={2}
-            placeholder=""
-            className="input-shell w-full"
-          />
+        <Campo
+          label="Objetivo"
+          error={errors.objetivoClase?.message}
+          hint={AYUDA_LISTA}
+          className="w-full"
+        >
+          <TextareaLista control={control} name="objetivoClase" />
+        </Campo>
+        <Campo
+          label="Contenidos"
+          error={errors.contenidosClase?.message}
+          hint={AYUDA_LISTA}
+          className="w-full"
+        >
+          <TextareaLista control={control} name="contenidosClase" />
         </Campo>
         <BotonEnviar enviando={isSubmitting} textoEnviando="Agregando..." className="button-primary">
           <PlusCircle className="mr-2 h-4 w-4" />

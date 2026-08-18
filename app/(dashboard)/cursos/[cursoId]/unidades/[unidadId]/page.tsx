@@ -8,7 +8,8 @@ import { GenericToast } from "@/components/GenericToast";
 import AddClaseForm from "@/components/clase/AddClaseForm";
 import ClasesFiltradas from "@/components/clase/ClasesFiltradas";
 import UnidadForm from "@/components/planificacion y unidades/UnidadForm";
-import { aValorFecha } from "@/lib/schemas/common";
+import ListaItems from "@/components/ListaItems";
+import { aFechaLegible, aValorFecha, resumenLista } from "@/lib/schemas/common";
 
 export default async function UnidadDidacticaPage({
   params,
@@ -42,8 +43,9 @@ export default async function UnidadDidacticaPage({
 
   const clases = unidad.clases.map((clase) => ({
     id: clase.id,
-    titulo: clase.objetivoClase || "Clase sin objetivo definido",
-    fecha: new Date(clase.fecha).toLocaleDateString("es-AR"),
+    // El listado es de una línea por clase: los objetivos van separados por " · ".
+    titulo: resumenLista(clase.temaClase) || "Clase sin tema definido",
+    fecha: aFechaLegible(clase.fecha),
     horario: clase.horaInicio && clase.horaFin ? ` · ${clase.horaInicio} a ${clase.horaFin}` : "",
     estado: clase.estado,
     presentacion: presentacionClase(
@@ -60,10 +62,9 @@ export default async function UnidadDidacticaPage({
       <section className="surface-card p-5 sm:p-6">
         <BackLink href={`/cursos/${cursoId}`} title={`Volver a ${unidad.planificacion.curso.nombre}`}/>
         <h1 className="page-title">{unidad.titulo}</h1>
-        <p className="text-sm text-slate-500 sm:text-base">{unidad.objetivo}</p>
+        <ListaItems valor={unidad.objetivo} className="text-sm text-slate-500 sm:text-base" />
         <p className="mt-2 text-sm text-slate-500">
-          Del {new Date(unidad.fechaInicio).toLocaleDateString("es-AR")} al{" "}
-          {new Date(unidad.fechaFin).toLocaleDateString("es-AR")}
+          Del {aFechaLegible(unidad.fechaInicio)} al {aFechaLegible(unidad.fechaFin)}
         </p>
 
         <details className="surface-card py-2 px-4 mt-4">

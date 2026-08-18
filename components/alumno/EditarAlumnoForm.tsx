@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { actualizarAlumno } from "@/lib/actions/curso.actions";
 import { alumnoSchema } from "@/lib/schemas/curso.schema";
-import { aValorFecha } from "@/lib/schemas/common";
 import { enviarFormulario } from "@/lib/form/enviar-formulario";
 import { Campo, ErrorGeneral } from "@/components/form/Campo";
 import BotonEnviar from "@/components/form/BotonEnviar";
@@ -16,8 +15,6 @@ export type AlumnoEditable = {
   id: string;
   nombre: string;
   apellido: string;
-  dni?: string | null;
-  fechaNacimiento: string;
   contactoEmergencia?: string | null;
 };
 
@@ -43,8 +40,6 @@ export default function EditarAlumnoForm({
     defaultValues: {
       nombre: alumno.nombre,
       apellido: alumno.apellido,
-      fechaNacimiento: aValorFecha(alumno.fechaNacimiento),
-      dni: alumno.dni ?? "",
       contactoEmergencia: alumno.contactoEmergencia ?? "",
     },
   });
@@ -77,12 +72,6 @@ export default function EditarAlumnoForm({
         </Campo>
         <Campo label="Apellido" error={errors.apellido?.message} className="col-span-2 lg:col-span-1">
           <input {...register("apellido")} placeholder="Ej: Perez" className="input-shell w-full" />
-        </Campo>
-        <Campo label="Fecha de nacimiento" error={errors.fechaNacimiento?.message} className="col-span-2">
-          <input {...register("fechaNacimiento")} type="date" className="input-shell w-full" />
-        </Campo>
-        <Campo label="DNI" error={errors.dni?.message} className="col-span-2 lg:col-span-1">
-          <input {...register("dni")} placeholder="12345678" inputMode="numeric" className="input-shell w-full" />
         </Campo>
         <Campo label="Contacto de emergencia" error={errors.contactoEmergencia?.message} className="col-span-2 lg:col-span-1">
           <input

@@ -68,6 +68,42 @@ export const emailRequerido = z
 export const idOpcional = z.string().trim().default("");
 
 // ==========================================
+// CAMPOS DE VARIOS ÍTEMS (UNO POR LÍNEA)
+// ==========================================
+
+// Objetivos, temas y contenidos son listas: la docente escribe un ítem por
+// línea y se guardan en una sola columna de texto separados por `\n`. Para que
+// el formato no se interprete distinto en cada vista, todo pasa por acá.
+
+/** Viñeta al inicio de la línea: la propia (`•`) o la que viene de pegar de Word. */
+const VINETA_AL_INICIO = /^\s*[•·*-]\s*/;
+
+/** Los ítems cargados, sin viñetas, sin espacios de más y sin líneas vacías. */
+export const itemsDeLista = (valor: string | null | undefined): string[] =>
+  (valor ?? "")
+    .split("\n")
+    .map((linea) => linea.replace(VINETA_AL_INICIO, "").trim())
+    .filter(Boolean);
+
+/** Texto listo para guardar: un ítem por línea y nada más. */
+export const normalizarLista = (valor: string | null | undefined) => itemsDeLista(valor).join("\n");
+
+/** Todos los ítems en una sola línea, para títulos y textos corridos. */
+export const resumenLista = (valor: string | null | undefined, separador = " · ") =>
+  itemsDeLista(valor).join(separador);
+
+/**
+ * Campo de lista opcional. Normaliza antes de medir el largo, así el límite
+ * cuenta lo que realmente se guarda y no las viñetas que agrega el formulario.
+ */
+export const listaOpcional = (etiqueta: string, max = 2000) =>
+  z
+    .string()
+    .transform(normalizarLista)
+    .refine((valor) => valor.length <= max, `${etiqueta} no puede superar los ${max} caracteres`)
+    .default("");
+
+// ==========================================
 // CONVERSIONES FORMULARIO ↔ BASE DE DATOS
 // ==========================================
 
@@ -95,6 +131,22 @@ export const rangoDelDia = (referencia: Date = new Date()) => {
 /** Inversa de `aFecha`: deja una fecha lista para un `<input type="date">`. */
 export const aValorFecha = (fecha: Date | string) =>
   (fecha instanceof Date ? fecha : new Date(fecha)).toISOString().slice(0, 10);
+
+/**
+ * Única forma de mostrar una fecha en pantalla: siempre `DD/MM/AAAA`.
+ *
+ * Las dos opciones son necesarias y por motivos distintos:
+ * - `timeZone: "UTC"` porque `aFecha` guarda medianoche UTC. Sin esto, en UTC-3
+ *   una clase del 08/05 se renderiza como 07/05.
+ * - `2-digit` porque `es-AR` por defecto no rellena con cero: da "8/5/2026".
+ */
+export const aFechaLegible = (fecha: Date | string) =>
+  (fecha instanceof Date ? fecha : new Date(fecha)).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 
 /** Las columnas opcionales de Prisma esperan `null`, no cadena vacía. */
 export const aTextoONull = (valor: string | null | undefined) => {

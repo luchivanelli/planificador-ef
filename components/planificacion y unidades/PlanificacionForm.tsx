@@ -6,8 +6,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import ConfirmActionButton from "@/components/ConfirmActionButton";
 import { Campo, ErrorGeneral } from "@/components/form/Campo";
 import BotonEnviar from "@/components/form/BotonEnviar";
+import TextareaLista from "@/components/form/TextareaLista";
+import { AYUDA_LISTA } from "@/lib/form/ayudas";
 import { planificacionSchema } from "@/lib/schemas/planificacion.schema";
 import { enviarFormulario } from "@/lib/form/enviar-formulario";
+import { cerrarDetails } from "@/lib/form/cerrar-details";
 import { actualizarPlanificacion, crearPlanificacion } from "@/lib/actions/planificacion.actions";
 
 export type PlanificacionEditable = {
@@ -24,10 +27,13 @@ export default function PlanificacionForm({
   planificacion?: PlanificacionEditable;
 }) {
   const router = useRouter();
+  // Hay un formulario por planificación en la misma página: el id no puede ser fijo.
+  const formId = `planificacion-form-${planificacion?.id ?? "nueva"}`;
   const {
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(planificacionSchema),
@@ -46,13 +52,14 @@ export default function PlanificacionForm({
           : crearPlanificacion(cursoId, datos),
       onExito: (_data, redirectTo) => {
         if (redirectTo) router.push(redirectTo);
+        cerrarDetails(formId);
         router.refresh();
       },
     })
   );
 
   return (
-    <form onSubmit={onSubmit} noValidate className="mt-3 space-y-3">
+    <form id={formId} onSubmit={onSubmit} noValidate className="mt-3 space-y-3">
       <div className="grid gap-3">
         <Campo label="Año" error={errors.anio?.message}>
           {/* Sólo lectura (no editable) pero se envía y valida igual que el resto. */}
@@ -66,11 +73,11 @@ export default function PlanificacionForm({
         </Campo>
       </div>
 
-      <Campo label="Objetivos" error={errors.objetivos?.message}>
-        <textarea
-          {...register("objetivos")}
+      <Campo label="Objetivos" error={errors.objetivos?.message} hint={AYUDA_LISTA}>
+        <TextareaLista
+          control={control}
+          name="objetivos"
           rows={3}
-          placeholder="Objetivos de la planificación (opcional)"
           className="input-shell min-h-[92px] w-full"
         />
       </Campo>

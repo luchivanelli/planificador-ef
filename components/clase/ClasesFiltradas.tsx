@@ -73,7 +73,7 @@ export default function ClasesFiltradas({ clases, cursoId }: { clases: ClaseList
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar clase por título"
+          placeholder="Buscar clase por tema"
           className="input-shell mb-3 w-full"
         />
 

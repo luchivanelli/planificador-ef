@@ -11,6 +11,7 @@ import ActividadForm from "@/components/clase/ActividadForm";
 import ActividadesLista from "@/components/clase/ActividadesLista";
 import type { EstadoAsistencia } from "@prisma/client";
 import BackLink from "@/components/BackLink";
+import ListaItems from "@/components/ListaItems";
 import { aValorFecha } from "@/lib/schemas/common";
 
 export default async function ClaseEnCursoPage({
@@ -76,9 +77,40 @@ export default async function ClaseEnCursoPage({
             {presentacion.etiqueta.toLocaleUpperCase()}
           </p>
         </div>
-        <p className="page-subtitle mt-1">{clase.objetivoClase || "Sin objetivo definido"}</p>
         {clase.horaInicio && clase.horaFin && (
           <p className="mt-2 text-sm text-slate-500">Horario: {clase.horaInicio} a {clase.horaFin}</p>
+        )}
+
+        {(clase.contenidosClase || clase.temaClase) && (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {clase.temaClase && (
+              <div>
+                <h2 className="text-xs font-semibold text-slate-500">TEMAS</h2>
+                <ListaItems
+                  valor={clase.temaClase}
+                  className="mt-1 text-sm text-slate-900 sm:text-base"
+                />
+              </div>
+            )}
+            {clase.objetivoClase && (
+              <div>
+                <h2 className="text-xs font-semibold text-slate-500">OBJETIVOS</h2>
+                <ListaItems
+                  valor={clase.objetivoClase}
+                  className="mt-1 text-sm text-slate-900 sm:text-base"
+                />
+              </div>
+            )}
+            {clase.contenidosClase && (
+              <div>
+                <h2 className="text-xs font-semibold text-slate-500">CONTENIDOS</h2>
+                <ListaItems
+                  valor={clase.contenidosClase}
+                  className="mt-1 text-sm text-slate-900 sm:text-base"
+                />
+              </div>
+            )}
+          </div>
         )}
 
         <details className="surface-card py-2 px-4 mt-4">
@@ -90,10 +122,11 @@ export default async function ClaseEnCursoPage({
               horaInicio: clase.horaInicio,
               horaFin: clase.horaFin,
               objetivoClase: clase.objetivoClase,
+              temaClase: clase.temaClase,
+              contenidosClase: clase.contenidosClase,
               ejeNapId: clase.ejeNapId,
               ejeOtro: clase.ejeOtro,
               espacioRequerido: clase.espacioRequerido,
-              alternativaClima: clase.alternativaClima,
               estado: clase.estado,
               motivoCancelacion: clase.motivoCancelacion,
               motivoCancelacionOtro: clase.motivoCancelacionOtro,

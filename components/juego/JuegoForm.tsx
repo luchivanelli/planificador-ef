@@ -9,6 +9,7 @@ import { Campo, ErrorGeneral } from "@/components/form/Campo";
 import BotonEnviar from "@/components/form/BotonEnviar";
 import { juegoSchema, type JuegoInput } from "@/lib/schemas/juego.schema";
 import { enviarFormulario } from "@/lib/form/enviar-formulario";
+import { cerrarDetails } from "@/lib/form/cerrar-details";
 import { actualizarJuego, crearJuego } from "@/lib/actions/juego.actions";
 import { CATEGORIAS, ESTRATEGIAS, RANGOS } from "@/lib/types";
 import ConfirmActionButton from "@/components/ConfirmActionButton";
@@ -44,6 +45,7 @@ export default function JuegoForm({
 }) {
   const router = useRouter();
   const esEdicion = Boolean(juego);
+  const formId = `juego-form-${juego?.id ?? "nuevo"}`;
 
   const {
     register,
@@ -74,14 +76,18 @@ export default function JuegoForm({
         if (esEdicion) toast.success("Juego actualizado");
         else reset(VALORES_NUEVOS);
         if (redirectTo) router.push(redirectTo);
-        onGuardado?.();
+        // Al editar, el panel lo controla quien envuelve al form (`JuegoItem` lo
+        // cierra con estado de React). Al crear, el `<details>` es del server
+        // component y sólo se puede cerrar por DOM.
+        if (onGuardado) onGuardado();
+        else cerrarDetails(formId);
         router.refresh();
       },
     })
   );
 
   return (
-    <form onSubmit={onSubmit} noValidate className="mt-3 space-y-3">
+    <form id={formId} onSubmit={onSubmit} noValidate className="mt-3 space-y-3">
       <Campo error={errors.nombre?.message}>
         <input {...register("nombre")} placeholder="Nombre del juego" className="input-shell w-full" />
       </Campo>

@@ -13,7 +13,7 @@ import { enviarFormulario } from "@/lib/form/enviar-formulario";
 import { guardarEvaluacion } from "@/lib/actions/evaluacion.actions";
 import { NIVELES_LOGRO, type NivelDeLogro } from "@/lib/types";
 
-type Criterio = { id: string; nombre: string };
+type Indicador = { id: string; nombre: string };
 
 /** La escala 1 a 10 se lee de un vistazo por color: rojo, ámbar y verde. */
 function clasePorNivel(nivel: NivelDeLogro) {
@@ -25,31 +25,31 @@ function clasePorNivel(nivel: NivelDeLogro) {
 export default function EvaluacionAlumno({
   alumno,
   rubricaId,
-  criterios,
+  indicadores,
   cursoId,
   claseId,
   evaluacion,
 }: {
   alumno: { id: string; nombre: string; apellido: string };
   rubricaId: string;
-  criterios: Criterio[];
+  indicadores: Indicador[];
   cursoId: string;
   claseId: string;
   evaluacion?: {
     id: string;
     observacionDocente?: string | null;
-    detalles: { criterioId: string; valor: number }[];
+    detalles: { indicadorId: string; valor: number }[];
   } | null;
 }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
 
   // No alcanza con que exista la evaluación: si a la rúbrica le agregaron un
-  // criterio después de guardarla, al alumno le falta responder ese.
+  // indicador después de guardarla, al alumno le falta responder ese.
   const evaluado =
-    criterios.length > 0 &&
-    criterios.every((criterio) =>
-      evaluacion?.detalles.some((detalle) => detalle.criterioId === criterio.id)
+    indicadores.length > 0 &&
+    indicadores.every((indicador) =>
+      evaluacion?.detalles.some((detalle) => detalle.indicadorId === indicador.id)
     );
 
   const {
@@ -61,15 +61,15 @@ export default function EvaluacionAlumno({
     resolver: zodResolver(evaluacionSchema),
     defaultValues: {
       observacionDocente: evaluacion?.observacionDocente ?? "",
-      // Los niveles se manejan como texto, igual que los devuelven los radios;
+      // Los puntajes se manejan como texto, igual que los devuelven los radios;
       // el esquema los convierte a número. La cadena vacía significa "sin
-      // responder": el esquema la rechaza y marca el criterio que falta.
+      // responder": el esquema la rechaza y marca el indicador que falta.
       valores: Object.fromEntries(
-        criterios.map((criterio) => {
+        indicadores.map((indicador) => {
           const nivel = evaluacion?.detalles.find(
-            (detalle) => detalle.criterioId === criterio.id
+            (detalle) => detalle.indicadorId === indicador.id
           )?.valor;
-          return [criterio.id, nivel === undefined ? "" : String(nivel)];
+          return [indicador.id, nivel === undefined ? "" : String(nivel)];
         })
       ) as Record<string, string>,
     },
@@ -125,16 +125,16 @@ export default function EvaluacionAlumno({
           noValidate
           className="space-y-4 border-t border-slate-100 bg-white px-4 pb-4 pt-3"
         >
-          {criterios.map((criterio) => (
-            <div key={criterio.id}>
+          {indicadores.map((indicador) => (
+            <div key={indicador.id}>
               <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
-                {criterio.nombre}
+                {indicador.nombre}
               </p>
               <div className="grid grid-cols-5 gap-2">
                 {NIVELES_LOGRO.map((nivel) => (
                   <label key={nivel} className="cursor-pointer">
                     <input
-                      {...register(`valores.${criterio.id}`)}
+                      {...register(`valores.${indicador.id}`)}
                       type="radio"
                       value={nivel}
                       className="peer sr-only"
@@ -147,7 +147,7 @@ export default function EvaluacionAlumno({
                   </label>
                 ))}
               </div>
-              <ErrorGeneral mensaje={errors.valores?.[criterio.id]?.message} />
+              <ErrorGeneral mensaje={errors.valores?.[indicador.id]?.message} />
             </div>
           ))}
 

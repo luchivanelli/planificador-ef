@@ -5,8 +5,9 @@ import { requerirDocente } from "@/lib/auth";
 import { marcarClasesDictadas, clasesPendientesDeAsistencia } from "@/lib/clases/consultas";
 import { presentacionClase } from "@/lib/clases/estado";
 import { cambiarEstadoClase } from "@/lib/actions/clases.actions";
-import { rangoDelDia } from "@/lib/schemas/common";
+import { aFechaLegible, rangoDelDia, resumenLista } from "@/lib/schemas/common";
 import FormSubmit from "@/components/FormSubmit";
+import ListaItems from "@/components/ListaItems";
 import type { Nivel, Turno } from "@prisma/client";
 
 const NIVELES: { value: Nivel; label: string }[] = [
@@ -99,7 +100,11 @@ export default async function DashboardPage() {
               <h2 className="text-lg font-bold text-slate-900">{cursoDeLaClase.nombre} {cursoDeLaClase.nivel == "primaria" ? "Primaria" : "Secundaria"}</h2>
                 <div className="p-4 border-1 border-dashed border-slate-200">
                   <h3 className="text-xs font-semibold text-slate-500">ACTIVIDAD DEL DIA</h3>
-                  <p className="text-sm sm:text-base text-slate-900 font-semibold mt-1">{clase.objetivoClase || "Sin objetivo definido"}</p>
+                  <ListaItems
+                    valor={clase.objetivoClase}
+                    vacio="Sin objetivo definido"
+                    className="text-sm sm:text-base text-slate-900 font-semibold mt-1"
+                  />
                   <p className="text-xs text-slate-500">Unidad: {clase.unidadDidactica.titulo}</p>
                 </div>
                 {presentacion.requiereAtencion && (
@@ -155,16 +160,10 @@ export default async function DashboardPage() {
                 >
                   <div className="min-w-[220px]">
                     <p className="text-sm font-semibold text-slate-900 sm:text-base">
-                      {cursoDeLaClase.nombre} ·{" "}
-                      {clase.fecha.toLocaleDateString("es-AR", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                        timeZone: "UTC",
-                      })}
+                      {cursoDeLaClase.nombre} · {aFechaLegible(clase.fecha)}
                     </p>
                     <p className="text-xs text-slate-500 sm:text-sm">
-                      {clase.objetivoClase || "Sin objetivo definido"} · Unidad:{" "}
+                      {resumenLista(clase.objetivoClase) || "Sin objetivo definido"} · Unidad:{" "}
                       {clase.unidadDidactica.titulo}
                     </p>
                   </div>

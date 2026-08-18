@@ -8,7 +8,7 @@ import { eliminarAlumno } from "@/lib/actions/curso.actions";
 import { eliminarJuego } from "@/lib/actions/juego.actions";
 import { eliminarPlanificacion } from "@/lib/actions/planificacion.actions";
 import { eliminarActividad } from "@/lib/actions/clases.actions";
-import { eliminarIndicador } from "@/lib/actions/indicador.actions";
+import { eliminarRubrica } from "@/lib/actions/evaluacion.actions";
 
 type ConfirmActionButtonProps = {
   buttonLabel: string;
@@ -23,7 +23,7 @@ type ConfirmActionButtonProps = {
     | "delete-juego"
     | "delete-planificacion"
     | "delete-actividad"
-    | "delete-indicador";
+    | "delete-rubrica";
   hiddenFields?: Record<string, string>;
   onSuccess?: () => void;
   successMessage?: string;
@@ -102,11 +102,11 @@ export default function ConfirmActionButton({
                         }
                         await eliminarActividad(campos.actividadId, campos.claseDiariaId, campos.cursoId);
                         break;
-                      case "delete-indicador":
-                        if (!campos.indicadorId || !campos.cursoId || !campos.claseId) {
-                          throw new Error("Faltan datos del indicador");
+                      case "delete-rubrica":
+                        if (!campos.rubricaId || !campos.cursoId || !campos.claseId) {
+                          throw new Error("Faltan datos de la rúbrica");
                         }
-                        await eliminarIndicador(campos.indicadorId, campos.cursoId, campos.claseId);
+                        await eliminarRubrica(campos.rubricaId, campos.cursoId, campos.claseId);
                         break;
                       default:
                         throw new Error("No action provided");

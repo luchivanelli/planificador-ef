@@ -17,19 +17,19 @@ export const nivelLogroSchema = z.coerce
   .min(NIVEL_MINIMO, { error: MENSAJE_NIVEL })
   .max(NIVEL_MAXIMO, { error: MENSAJE_NIVEL });
 
-// El nivel y el ciclo no viajan en el formulario: la acción los toma del curso.
+// La clase no viaja en el formulario: la acción la toma de la URL.
 export const rubricaSchema = z.object({
   nombre: textoRequerido("El nombre de la rúbrica", 120),
-  criterios: z
-    .array(z.object({ nombre: textoRequerido("El criterio", 200) }))
-    .min(1, "Agregá al menos un criterio")
-    .max(20, "No podés cargar más de 20 criterios"),
+  indicadores: z
+    .array(z.object({ nombre: textoRequerido("El indicador", 200) }))
+    .min(1, "Agregá al menos un indicador")
+    .max(20, "No podés cargar más de 20 indicadores"),
 });
 
 /**
- * Los criterios son dinámicos (dependen de la rúbrica), así que se validan como
- * un mapa `criterioId -> nivel de logro`. El formulario arranca con todos los
- * criterios en cadena vacía, que el esquema rechaza: así cada criterio sin
+ * Los indicadores son dinámicos (dependen de la rúbrica), así que se validan como
+ * un mapa `indicadorId -> nivel de logro`. El formulario arranca con todos los
+ * indicadores en cadena vacía, que el esquema rechaza: así cada indicador sin
  * responder muestra su propio error.
  */
 export const evaluacionSchema = z.object({

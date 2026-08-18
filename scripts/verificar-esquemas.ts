@@ -5,8 +5,7 @@ import { planificacionSchema, unidadDidacticaSchema } from "../lib/schemas/plani
 import { claseSchema, actividadSchema } from "../lib/schemas/clase.schema";
 import { juegoSchema, separarMateriales } from "../lib/schemas/juego.schema";
 import { rubricaSchema, evaluacionSchema } from "../lib/schemas/evaluacion.schema";
-import { indicadorSchema, indicadoresClaseSchema } from "../lib/schemas/indicador.schema";
-import { aFecha, aValorFecha } from "../lib/schemas/common";
+import { aFecha, aFechaLegible, aValorFecha } from "../lib/schemas/common";
 import { validarPayload } from "../lib/form/action-result";
 
 let pasadas = 0;
@@ -73,33 +72,16 @@ caso("año lectivo no numérico", () => {
 });
 
 console.log("alumno");
-caso("fecha de nacimiento futura", () => {
-  assert.match(
-    errorDe(alumnoSchema, { nombre: "A", apellido: "B", fechaNacimiento: "2099-01-01" }, "fechaNacimiento"),
-    /no puede ser futura/
-  );
+caso("el nombre es obligatorio", () => {
+  assert.match(errorDe(alumnoSchema, { nombre: "   ", apellido: "B" }, "nombre"), /es obligatorio/);
 });
-caso("DNI con puntos", () => {
-  assert.match(
-    errorDe(alumnoSchema, { nombre: "A", apellido: "B", fechaNacimiento: "2015-03-02", dni: "12.345.678" }, "dni"),
-    /entre 7 y 9 números/
-  );
+caso("el apellido es obligatorio", () => {
+  assert.match(errorDe(alumnoSchema, { nombre: "A", apellido: "" }, "apellido"), /es obligatorio/);
 });
-caso("DNI vacío es obligatorio", () => {
-  assert.match(
-    errorDe(alumnoSchema, { nombre: "A", apellido: "B", fechaNacimiento: "2015-03-02", dni: "  " }, "dni"),
-    /es obligatorio/
-  );
-});
-caso("contacto vacío es válido y el DNI se limpia", () => {
-  const r = validarPayload(alumnoSchema, {
-    nombre: "A",
-    apellido: "B",
-    fechaNacimiento: "2015-03-02",
-    dni: " 12345678 ",
-  });
+caso("nombre y apellido alcanzan: el contacto es opcional", () => {
+  const r = validarPayload(alumnoSchema, { nombre: " Ana ", apellido: " Gómez " });
   assert.ok(r.ok);
-  assert.equal(r.ok && r.data.dni, "12345678");
+  assert.equal(r.ok && r.data.nombre, "Ana");
   assert.equal(r.ok && r.data.contactoEmergencia, "");
 });
 
@@ -186,51 +168,55 @@ caso("materiales se separan por coma", () => {
 });
 
 console.log("evaluación");
-caso("rúbrica sin criterios", () => {
-  assert.match(errorDe(rubricaSchema, { nombre: "R", criterios: [] }, "criterios"), /al menos un criterio/);
-});
-caso("criterio vacío se marca por índice", () => {
+caso("rúbrica sin indicadores", () => {
   assert.match(
-    errorDe(rubricaSchema, { nombre: "R", criterios: [{ nombre: "ok" }, { nombre: "" }] }, "criterios.1.nombre"),
+    errorDe(rubricaSchema, { nombre: "R", indicadores: [] }, "indicadores"),
+    /al menos un indicador/
+  );
+});
+caso("indicador vacío se marca por índice", () => {
+  assert.match(
+    errorDe(
+      rubricaSchema,
+      { nombre: "R", indicadores: [{ nombre: "ok" }, { nombre: "" }] },
+      "indicadores.1.nombre"
+    ),
     /es obligatorio/
   );
 });
-caso("criterio sin responder", () => {
+caso("indicador sin responder", () => {
   assert.match(
-    errorDe(evaluacionSchema, { valores: { crit1: "9", crit2: "" } }, "valores.crit2"),
+    errorDe(evaluacionSchema, { valores: { ind1: "9", ind2: "" } }, "valores.ind2"),
     /nivel de logro/
   );
 });
-caso("nivel fuera de la escala", () => {
+caso("puntaje fuera de la escala del 1 al 10", () => {
   assert.match(
-    errorDe(evaluacionSchema, { valores: { crit1: "11" } }, "valores.crit1"),
+    errorDe(evaluacionSchema, { valores: { ind1: "11" } }, "valores.ind1"),
     /nivel de logro/
   );
 });
 caso("evaluación completa", () => {
-  const resultado = validarPayload(evaluacionSchema, { valores: { crit1: "9", crit2: "4" } });
+  const resultado = validarPayload(evaluacionSchema, { valores: { ind1: "9", ind2: "4" } });
   assert.ok(resultado.ok);
   // Los radios mandan texto: se guarda como número.
-  assert.deepEqual(resultado.data.valores, { crit1: 9, crit2: 4 });
-});
-
-console.log("indicadores");
-caso("el título es obligatorio", () => {
-  assert.match(errorDe(indicadorSchema, { titulo: "   " }, "titulo"), /es obligatorio/);
-});
-caso("valor fuera de la escala", () => {
-  assert.match(errorDe(indicadoresClaseSchema, { valores: { ind1: "TAL_VEZ" } }, "valores.ind1"), /Elegí un valor/);
-});
-caso("se puede dejar un indicador sin responder", () => {
-  const resultado = validarPayload(indicadoresClaseSchema, { valores: { ind1: "SI", ind2: "" } });
-  assert.ok(resultado.ok);
-  assert.deepEqual(resultado.data.valores, { ind1: "SI", ind2: "" });
+  assert.deepEqual(resultado.data.valores, { ind1: 9, ind2: 4 });
 });
 
 console.log("fechas");
 caso("ida y vuelta sin corrimiento de día", () => {
   assert.equal(aValorFecha(aFecha("2026-05-01")), "2026-05-01");
   assert.equal(aFecha("2026-05-01").toISOString(), "2026-05-01T00:00:00.000Z");
+});
+caso("se muestra siempre como DD/MM/AAAA", () => {
+  // Día y mes de un dígito: `es-AR` sin opciones daría "8/5/2026".
+  assert.equal(aFechaLegible(aFecha("2026-05-08")), "08/05/2026");
+  assert.equal(aFechaLegible(aFecha("2026-12-31")), "31/12/2026");
+});
+caso("no se corre un día por el huso horario", () => {
+  // Guardadas como medianoche UTC: en UTC-3 sin `timeZone` mostrarían el día anterior.
+  assert.equal(aFechaLegible("2026-01-01T00:00:00.000Z"), "01/01/2026");
+  assert.equal(aFechaLegible(new Date("2026-03-01T00:00:00.000Z")), "01/03/2026");
 });
 
 console.log(`\n${pasadas} verificaciones OK`);

@@ -13,6 +13,21 @@ import {
   type ResultadoAccion,
 } from "@/lib/form/action-result";
 
+function rutaEvaluacion(cursoId: string, claseId: string) {
+  return `/cursos/${cursoId}/clase/${claseId}/evaluacion`;
+}
+
+/**
+ * `claseId` llega desde la URL, así que se confirma que la clase cuelgue de
+ * este curso antes de escribir nada.
+ */
+async function claseDelCurso(claseId: string, cursoId: string) {
+  return db.claseDiaria.findFirst({
+    where: { id: claseId, unidadDidactica: { planificacion: { cursoId } } },
+    select: { id: true },
+  });
+}
+
 export async function crearRubrica(
   cursoId: string,
   claseId: string,
@@ -29,31 +44,46 @@ export async function crearRubrica(
   const validado = validarPayload(rubricaSchema, input);
   if (!validado.ok) return validado;
 
-  const { nombre, criterios } = validado.data;
+  const { nombre, indicadores } = validado.data;
 
-  // El nivel y el ciclo se toman del curso, no del cliente.
-  const curso = await db.curso.findUnique({
-    where: { id: cursoId },
-    select: { nivel: true, ciclo: true },
-  });
-  if (!curso) {
-    return fallo("El curso no existe");
+  if (!(await claseDelCurso(claseId, cursoId))) {
+    return fallo("La clase no existe o no pertenece a este curso");
   }
 
   await db.rubrica.create({
     data: {
-      docenteId: docente.id,
+      claseId,
       nombre,
-      nivel: curso.nivel,
-      ciclo: curso.ciclo,
-      criterios: {
-        create: criterios.map((criterio) => ({ nombre: criterio.nombre })),
+      indicadores: {
+        create: indicadores.map((indicador) => ({ nombre: indicador.nombre })),
       },
     },
   });
 
-  revalidatePath(`/cursos/${cursoId}/clase/${claseId}/evaluacion`);
+  revalidatePath(rutaEvaluacion(cursoId, claseId));
   return exito();
+}
+
+/** Con la rúbrica caen sus indicadores y todo lo evaluado con ella (Cascade). */
+export async function eliminarRubrica(rubricaId: string, cursoId: string, claseId: string) {
+  const docente = await requerirDocente();
+
+  await verificarPropietarioCurso(cursoId, docente.id);
+
+  // La rúbrica es de la clase: alcanza con exigir que sea la de esta URL, ya
+  // verificada como parte del curso del docente.
+  const rubrica = await db.rubrica.findFirst({
+    where: { id: rubricaId, claseId, clase: { unidadDidactica: { planificacion: { cursoId } } } },
+    select: { id: true },
+  });
+  if (!rubrica) {
+    throw new Error("La rúbrica no existe o no es de esta clase");
+  }
+
+  await db.rubrica.delete({ where: { id: rubricaId } });
+
+  revalidatePath(rutaEvaluacion(cursoId, claseId));
+  return { ok: true };
 }
 
 export async function guardarEvaluacion(
@@ -77,40 +107,35 @@ export async function guardarEvaluacion(
 
   const { observacionDocente, valores } = validado.data;
 
-  // `claseId` llega desde la URL, así que se confirma que la clase cuelgue de
-  // este curso antes de escribir nada.
-  const clase = await db.claseDiaria.findFirst({
-    where: { id: claseId, unidadDidactica: { planificacion: { cursoId } } },
-    select: { id: true },
-  });
-  if (!clase) {
+  if (!(await claseDelCurso(claseId, cursoId))) {
     return fallo("La clase no existe o no pertenece a este curso");
   }
 
+  // Las rúbricas son de la clase: si es la de esta URL, ya es del docente.
   const rubrica = await db.rubrica.findFirst({
-    where: { id: rubricaId, docenteId: docente.id },
-    include: { criterios: { select: { id: true } } },
+    where: { id: rubricaId, claseId },
+    include: { indicadores: { select: { id: true } } },
   });
   if (!rubrica) {
-    return fallo("La rúbrica no existe o no es tuya");
+    return fallo("La rúbrica no existe o no es de esta clase");
   }
 
-  // El formulario es dinámico: se controla acá que los criterios enviados sean
+  // El formulario es dinámico: se controla acá que los indicadores enviados sean
   // los de la rúbrica y que no falte ninguno.
-  const idsDeRubrica = new Set(rubrica.criterios.map((criterio) => criterio.id));
+  const idsDeRubrica = new Set(rubrica.indicadores.map((indicador) => indicador.id));
   const idsEnviados = Object.keys(valores);
 
   if (idsEnviados.some((id) => !idsDeRubrica.has(id))) {
-    return fallo("Hay criterios que no pertenecen a esta rúbrica");
+    return fallo("Hay indicadores que no pertenecen a esta rúbrica");
   }
   if (idsEnviados.length !== idsDeRubrica.size) {
-    return fallo("Faltan criterios por evaluar");
+    return fallo("Faltan indicadores por evaluar");
   }
 
-  // El esquema ya dejó el nivel como número en rango: se guarda tal cual.
-  const detalles = idsEnviados.map((criterioId) => ({
-    criterioId,
-    valor: valores[criterioId],
+  // El esquema ya dejó el puntaje como número en rango: se guarda tal cual.
+  const detalles = idsEnviados.map((indicadorId) => ({
+    indicadorId,
+    valor: valores[indicadorId],
   }));
 
   if (evaluacionId) {
@@ -136,6 +161,6 @@ export async function guardarEvaluacion(
     });
   }
 
-  revalidatePath(`/cursos/${cursoId}/clase/${claseId}/evaluacion`);
+  revalidatePath(rutaEvaluacion(cursoId, claseId));
   return exito();
 }

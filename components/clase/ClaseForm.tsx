@@ -6,9 +6,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Campo, ErrorGeneral } from "@/components/form/Campo";
 import BotonEnviar from "@/components/form/BotonEnviar";
+import TextareaLista from "@/components/form/TextareaLista";
+import { AYUDA_LISTA } from "@/lib/form/ayudas";
 import { claseSchema } from "@/lib/schemas/clase.schema";
 import { aValorFecha } from "@/lib/schemas/common";
 import { enviarFormulario } from "@/lib/form/enviar-formulario";
+import { cerrarDetails } from "@/lib/form/cerrar-details";
 import { actualizarClase, eliminarClase } from "@/lib/actions/clases.actions";
 import { EJE_OTRO, ESTADOS_CLASE, type OpcionEje } from "@/lib/types";
 import type { ClaseInput } from "@/lib/schemas/clase.schema";
@@ -21,10 +24,11 @@ export type ClaseEditable = {
   horaInicio: string | null;
   horaFin: string | null;
   objetivoClase: string | null;
+  temaClase: string | null;
+  contenidosClase: string | null;
   ejeNapId: string | null;
   ejeOtro: string | null;
   espacioRequerido: ClaseInput["espacioRequerido"] | null;
-  alternativaClima: string | null;
   estado: ClaseInput["estado"];
   // Sin campo propio en el formulario, pero viajan igual: `claseSchema` los
   // define con `default("")` y `datosDeClase` los reescribe con lo que reciba.
@@ -60,12 +64,13 @@ export default function ClaseForm({
       horaInicio: clase.horaInicio ?? "",
       horaFin: clase.horaFin ?? "",
       objetivoClase: clase.objetivoClase ?? "",
+      temaClase: clase.temaClase ?? "",
+      contenidosClase: clase.contenidosClase ?? "",
       // Una clase con eje escrito a mano no tiene `ejeNapId`: el select vuelve
       // a mostrar "Otro" y el texto guardado queda en el input.
       ejeNapId: clase.ejeNapId ?? (clase.ejeOtro ? EJE_OTRO : ""),
       ejeOtro: clase.ejeOtro ?? "",
       espacioRequerido: clase.espacioRequerido ?? "",
-      alternativaClima: clase.alternativaClima ?? "",
       motivoCancelacion: clase.motivoCancelacion ?? "",
       motivoCancelacionOtro: clase.motivoCancelacionOtro ?? "",
     },
@@ -80,8 +85,7 @@ export default function ClaseForm({
       errorInesperado: "No se pudieron guardar los cambios",
       onExito: () => {
         toast.success("Clase actualizada");
-        // El <details> vive en el server component: se cierra desde el DOM.
-        document.getElementById(formId)?.closest("details")?.removeAttribute("open");
+        cerrarDetails(formId);
         router.refresh();
       },
     })
@@ -144,11 +148,14 @@ export default function ClaseForm({
           </Campo>
         )}
         <div className="grid md:grid-cols-2 gap-x-2">
-          <Campo label="Objetivo" error={errors.objetivoClase?.message}>
-            <textarea {...register("objetivoClase")} rows={2} className="input-shell w-full" />
+          <Campo label="Tema" error={errors.temaClase?.message} hint={AYUDA_LISTA}>
+            <TextareaLista control={control} name="temaClase" />
           </Campo>
-          <Campo label="Alternativa por clima" error={errors.alternativaClima?.message}>
-            <textarea {...register("alternativaClima")} rows={2} className="input-shell w-full" />
+          <Campo label="Objetivo" error={errors.objetivoClase?.message} hint={AYUDA_LISTA}>
+            <TextareaLista control={control} name="objetivoClase" />
+          </Campo>
+          <Campo label="Contenidos" error={errors.contenidosClase?.message} hint={AYUDA_LISTA}>
+            <TextareaLista control={control} name="contenidosClase" />
           </Campo>
         </div>
 

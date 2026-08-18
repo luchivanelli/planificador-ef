@@ -1,15 +1,16 @@
 import { z } from "zod";
-import { enteroRequerido, fechaRequerida, textoOpcional, textoRequerido } from "./common";
+import { enteroRequerido, fechaRequerida, listaOpcional, textoRequerido } from "./common";
 
 export const planificacionSchema = z.object({
   anio: enteroRequerido("El año", 2000, 2100),
-  objetivos: textoOpcional("Los objetivos", 2000),
+  // Lista: un objetivo por línea (ver `listaOpcional`).
+  objetivos: listaOpcional("Los objetivos", 2000),
 });
 
 export const unidadDidacticaSchema = z
   .object({
     titulo: textoRequerido("El título", 120),
-    objetivo: textoOpcional("Los objetivos", 2000),
+    objetivo: listaOpcional("Los objetivos", 2000),
     fechaInicio: fechaRequerida("La fecha de inicio"),
     fechaFin: fechaRequerida("La fecha de fin"),
   })

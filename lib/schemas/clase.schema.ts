@@ -5,6 +5,7 @@ import {
   fechaRequerida,
   horaOpcional,
   idOpcional,
+  listaOpcional,
   textoOpcional,
   textoRequerido,
 } from "./common";
@@ -14,7 +15,10 @@ export const claseSchema = z
     fecha: fechaRequerida("La fecha"),
     horaInicio: horaOpcional("La hora de inicio"),
     horaFin: horaOpcional("La hora de fin"),
-    objetivoClase: textoOpcional("El objetivo", 500),
+    // Listas: un ítem por línea (ver `listaOpcional`).
+    objetivoClase: listaOpcional("El objetivo", 500),
+    temaClase: listaOpcional("Los temas", 500),
+    contenidosClase: listaOpcional("Los contenidos", 1000),
     // Un id de `EjeNap` o el centinela `otro`, que habilita `ejeOtro`.
     ejeNapId: textoRequerido("El eje", 40),
     ejeOtro: textoOpcional("El eje", 200),
@@ -22,7 +26,6 @@ export const claseSchema = z
       .enum(["patio", "gimnasio", "cancha_externa"], { error: "Elegí un espacio válido" })
       .or(z.literal(""))
       .default(""),
-    alternativaClima: textoOpcional("La alternativa por clima", 300),
     // `reprogramada` no se ofrece en el formulario, pero se acepta para poder
     // guardar sin cambios una clase que ya quedó en ese estado.
     estado: z

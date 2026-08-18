@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MapPin, User, Clock, NotebookPen } from "lucide-react";
+import { MapPin, User, Clock, NotebookPen, ClipboardList } from "lucide-react";
 import { db } from "@/lib/db";
 import AddAlumnoClient from "@/components/alumno/AddAlumnoClient";
 import AlumnosSearch from "@/components/alumno/AlumnosSearch";
+import DiagnosticoGrupalForm from "@/components/curso/DiagnosticoGrupalForm";
 import BackLink from "@/components/BackLink";
 import {NIVELES, TURNOS} from "@/lib/types";
+import { aFechaLegible } from "@/lib/schemas/common";
 import PlanificacionForm from "@/components/planificacion y unidades/PlanificacionForm";
 import { GenericToast } from "@/components/GenericToast";
 
@@ -34,10 +36,7 @@ export default async function CursoPage({
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
-  const alumnos = curso.alumnos.map((ca) => ({
-    ...ca.alumno,
-    fechaNacimiento: ca.alumno.fechaNacimiento.toISOString(),
-  }));
+  const alumnos = curso.alumnos.map((ca) => ca.alumno);
 
   return (
     <div className="space-y-4">
@@ -96,7 +95,7 @@ export default async function CursoPage({
                     {p.unidades.map((u)=> (
                       <Link key={u.id} href={`/cursos/${cursoId}/unidades/${u.id}`} className="block border border-slate-200 border-l-[3px] border-l-[#0f63ff] p-2 md:p-4 mb-2">
                         <p className="text-xs text-slate-900 sm:text-sm font-semibold">{u.titulo}</p>
-                        <p className="text-xs text-slate-500 sm:text-sm">Desde {u.fechaInicio.toLocaleDateString()} hasta {u.fechaFin.toLocaleDateString()}</p>
+                        <p className="text-xs text-slate-500 sm:text-sm">Desde {aFechaLegible(u.fechaInicio)} hasta {aFechaLegible(u.fechaFin)}</p>
                       </Link>
                     ))}
                   </div>
@@ -149,6 +148,21 @@ export default async function CursoPage({
             <AlumnosSearch alumnos={alumnos} cursoId={cursoId} />
             <AddAlumnoClient cursoId={cursoId} />
           </div>
+        </section>
+        <section className="surface-card p-5 sm:p-6 w-full">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="bg-[#0f63ff]/10 p-2.5 text-[#0f63ff]">
+              <ClipboardList className="h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">Diagnóstico grupal</h1>
+              <p className="text-sm text-slate-500 sm:text-base">
+                Haz un diagnóstico general del curso.
+              </p>
+            </div>
+          </div>
+
+          <DiagnosticoGrupalForm cursoId={cursoId} diagnosticoGrupal={curso.diagnosticoGrupal} />
         </section>
       </div>
     </div>

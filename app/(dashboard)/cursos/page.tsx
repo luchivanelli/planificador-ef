@@ -1,15 +1,17 @@
-import { School, MapPin, User, Plus } from 'lucide-react';
+import Link from "next/link";
+import { Plus, School, SlidersHorizontal } from "lucide-react";
 import { db } from "@/lib/db";
 import { buildCursosHref, getCursoFilterValues } from "@/lib/curso-filters";
-import Link from 'next/link';
-import {NIVELES, TURNOS} from "@/lib/types";
+import { NIVELES, TURNOS } from "@/lib/types";
+import CursoCard from "@/components/curso/CursoCard";
+import EmptyState from "@/components/ui/EmptyState";
+import PageHeader from "@/components/ui/PageHeader";
 
 const cursosPage = async ({
-    searchParams,
-  }: {
-    searchParams: Promise<{ nivel?: string; turno?: string }>;
-  }) => {
-
+  searchParams,
+}: {
+  searchParams: Promise<{ nivel?: string; turno?: string }>;
+}) => {
   const rawParams = await searchParams;
   const { nivel, turno } = getCursoFilterValues(rawParams);
 
@@ -26,93 +28,126 @@ const cursosPage = async ({
     return buildCursosHref({ nivel, turno }, { nivel: nuevoNivel, turno: nuevoTurno });
   }
 
+  const hayFiltros = Boolean(nivel || turno);
+
   return (
-    <div className="space-y-4">
-      <section className="surface-card p-5 sm:p-6">
-        <div className="mb-4 flex items-start gap-4 sm:items-center">
-          <div className="bg-[#0f63ff]/10 p-2.5 text-[#0f63ff]">
-            <School className="h-5 w-5 sm:h-6 sm:w-6" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">Mis cursos</h1>
-            <p className="text-sm text-slate-500 sm:text-base">
-              Filtrá por nivel y turno para encontrar rápidamente el curso que buscás.
-            </p>
-          </div>
-        </div>
+    <div className="space-y-4 sm:space-y-5">
+      <PageHeader
+        titulo="Mis cursos"
+        subtitulo="Filtrá por nivel y turno para encontrar rápidamente el curso que buscás."
+        acciones={
+          <Link href="/cursos/nuevo" className="button-primary">
+            <Plus className="h-4 w-4" />
+            Nuevo curso
+          </Link>
+        }
+      />
 
-        <div className="space-y-2">
-          <div className="flex flex-wrap gap-1.5">
-            <Link
-              href={hrefFiltro(null, undefined)}
-              className={`rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${!nivel ? "border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff]" : "border-slate-200 text-slate-600"}`}
-            >
-              Todos los niveles
+      <section className="card p-4 sm:p-5">
+        <div className="flex items-center gap-2 pb-3">
+          <SlidersHorizontal className="h-4 w-4 text-brand-500" />
+          <p className="section-title">Filtros</p>
+          {hayFiltros && (
+            <Link href="/cursos" className="link-brand ml-auto text-xs">
+              Limpiar
             </Link>
-            {NIVELES.map((n) => (
-              <Link
-                key={n.value}
-                href={hrefFiltro(n.value, undefined)}
-                className={`rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${nivel === n.value ? "border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff]" : "border-slate-200 text-slate-600"}`}
-              >
-                {n.label}
-              </Link>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Link
-              href={hrefFiltro(undefined, null)}
-              className={`rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${!turno ? "border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff]" : "border-slate-200 text-slate-600"}`}
-            >
-              Todas los turnos
-            </Link>
-            {TURNOS.map((t) => (
-              <Link
-                key={t.value}
-                href={hrefFiltro(undefined, t.value)}
-                className={`rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${turno === t.value ? "border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff]" : "border-slate-200 text-slate-600"}`}
-              >
-                {t.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-2 pl-0 max-h-[400px] sm:max-h-[500px] overflow-y-auto">
-        <div className="grid gap-3 md:grid-cols-2">
-          {cursos.map((curso) => (
-            <Link key={curso.id} href={`/cursos/${curso.id}`} className="block border-primary bg-white p-4 sm:flex sm:items-start sm:justify-between sm:gap-4 cursor-pointer">
-              <div className="space-y-1 w-full">
-                <div className="flex flex-wrap justify-between items-center gap-1">
-                  <p className="text-sm pr-2 font-semibold text-slate-900 sm:text-lg">{curso.nombre}</p>
-                  <span className="border-1 border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff] text-[11px] sm:text-xs font-medium px-2 py-0.5 sm:py-1 rounded-full">
-                    {NIVELES.find((n) => n.value === curso.nivel)?.label} · {TURNOS.find((t) => t.value === curso.turno)?.label}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-3 sm:h-4 w-3 sm:w-4 text-[#0f63ff]"/>
-                  <p className="text-xs text-slate-500 sm:text-sm">{curso.institucion.nombre}</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <User className="h-3 sm:h-4 w-3 sm:w-4 text-[#0f63ff]"/>
-                  <p className="text-xs text-slate-500 sm:text-sm">{curso.alumnos.length} alumnos</p>
-                </div>
-              </div>
-            </Link>
-          ))}
-          {cursos.length === 0 && (
-            <div className="surface-card w-full p-5 text-center text-sm sm:text-base text-slate-500">No hay cursos con estos filtros.</div>
           )}
         </div>
+
+        <div className="space-y-3">
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-ink-500">Nivel</p>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={hrefFiltro(null, undefined)}
+                className={`chip ${!nivel ? "chip-activo" : ""}`}
+              >
+                Todos
+              </Link>
+              {NIVELES.map((n) => (
+                <Link
+                  key={n.value}
+                  href={hrefFiltro(n.value, undefined)}
+                  className={`chip ${nivel === n.value ? "chip-activo" : ""}`}
+                >
+                  {n.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-ink-500">Turno</p>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={hrefFiltro(undefined, null)}
+                className={`chip ${!turno ? "chip-activo" : ""}`}
+              >
+                Todos
+              </Link>
+              {TURNOS.map((t) => (
+                <Link
+                  key={t.value}
+                  href={hrefFiltro(undefined, t.value)}
+                  className={`chip ${turno === t.value ? "chip-activo" : ""}`}
+                >
+                  {t.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
-      <Link href="/cursos/nuevo" className="flex items-center surface-card p-5 text-sm sm:text-base font-semibold text-slate-900">
-        <Plus className="mr-2 h-3 sm:h-4 w-3 sm:w-4"/>
-        Nuevo curso
-      </Link>
-    </div>
-  )
-}
+      <section>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="section-title">
+            {cursos.length} {cursos.length === 1 ? "curso" : "cursos"}
+          </p>
+        </div>
 
-export default cursosPage
+        {cursos.length === 0 ? (
+          <EmptyState
+            icono={School}
+            titulo={hayFiltros ? "No hay cursos con estos filtros" : "Todavía no hay cursos"}
+            descripcion={
+              hayFiltros
+                ? "Probá quitando algún filtro para ver más resultados."
+                : "Creá tu primer curso para empezar a planificar."
+            }
+            accion={
+              hayFiltros ? (
+                <Link href="/cursos" className="button-secondary">
+                  Ver todos los cursos
+                </Link>
+              ) : (
+                <Link href="/cursos/nuevo" className="button-primary">
+                  <Plus className="h-4 w-4" />
+                  Nuevo curso
+                </Link>
+              )
+            }
+          />
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {cursos.map((curso) => (
+              <CursoCard
+                key={curso.id}
+                curso={{
+                  id: curso.id,
+                  nombre: curso.nombre,
+                  nivel: curso.nivel,
+                  turno: curso.turno,
+                  institucion: curso.institucion.nombre,
+                  cantidadAlumnos: curso.alumnos.length,
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+};
+
+export default cursosPage;

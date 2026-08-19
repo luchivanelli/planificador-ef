@@ -1,6 +1,11 @@
 "use client";
+
 import { useMemo, useState, type ReactNode } from "react";
+import { Gamepad2, SlidersHorizontal } from "lucide-react";
 import JuegoItem, { type JuegoListado } from "@/components/juego/JuegoItem";
+import Disclosure from "@/components/ui/Disclosure";
+import EmptyState from "@/components/ui/EmptyState";
+import SearchInput from "@/components/ui/SearchInput";
 
 /**
  * `filtros` llega ya renderizado desde el servidor: sólo el buscador necesita
@@ -29,26 +34,33 @@ export default function JuegosLista({
 
   return (
     <div className="space-y-4">
-      <section className="surface-card p-5 sm:p-6">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
+      <section className="card space-y-3 p-4 sm:p-5">
+        <SearchInput
+          valor={q}
+          onCambio={setQ}
           placeholder="Buscar juego por nombre o descripción"
-          className="input-shell mb-3 w-full"
         />
-        <details className="surface-card py-2 px-4">
-          <summary className="cursor-pointer text-sm font-semibold text-slate-900 sm:text-base">Filtros</summary>
+        <Disclosure titulo="Filtrar por edad, categoría y estrategia" icono={SlidersHorizontal}>
           {filtros}
-        </details>
+        </Disclosure>
       </section>
 
-      <section className="space-y-2 max-h-[400px] sm:max-h-[500px] overflow-y-auto">
-        {filtrados.map((juego) => (
-          <JuegoItem key={juego.id} juego={juego} />
-        ))}
-        {filtrados.length === 0 && (
-          <div className="surface-card p-5 text-center text-sm sm:text-base text-slate-500">
-            No hay juegos con estos filtros.
+      <section className="space-y-3">
+        <p className="section-title">
+          {filtrados.length} {filtrados.length === 1 ? "juego" : "juegos"}
+        </p>
+
+        {filtrados.length === 0 ? (
+          <EmptyState
+            icono={Gamepad2}
+            titulo="No hay juegos con estos filtros"
+            descripcion="Probá con otra búsqueda, o cargá un juego nuevo al banco."
+          />
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {filtrados.map((juego) => (
+              <JuegoItem key={juego.id} juego={juego} />
+            ))}
           </div>
         )}
       </section>

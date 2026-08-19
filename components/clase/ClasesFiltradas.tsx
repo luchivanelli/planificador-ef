@@ -1,8 +1,13 @@
 "use client";
+
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { CalendarClock, CalendarX2, ChevronRight } from "lucide-react";
 import type { EstadoClase } from "@prisma/client";
 import type { PresentacionClase } from "@/lib/clases/estado";
+import ClaseBadge from "@/components/clase/ClaseBadge";
+import EmptyState from "@/components/ui/EmptyState";
+import SearchInput from "@/components/ui/SearchInput";
 
 export type ClaseListada = {
   id: string;
@@ -20,11 +25,11 @@ export type ClaseListada = {
 type ClaveEstado = "programada" | "dictada" | "suspendida" | "cancelada" | "sin_asistencia";
 
 const ESTADOS: { value: ClaveEstado; label: string }[] = [
+  { value: "sin_asistencia", label: "Sin asistencia" },
   { value: "programada", label: "Programadas" },
   { value: "dictada", label: "Dictadas" },
   { value: "suspendida", label: "Suspendidas" },
   { value: "cancelada", label: "Canceladas" },
-  { value: "sin_asistencia", label: "Sin asistencia" },
 ];
 
 function claveEstado(clase: ClaseListada): ClaveEstado | null {
@@ -40,14 +45,25 @@ function claveEstado(clase: ClaseListada): ClaveEstado | null {
   return null;
 }
 
-const pill = (activo: boolean) =>
-  `rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${
-    activo ? "border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff]" : "border-slate-200 text-slate-600"
-  }`;
-
-export default function ClasesFiltradas({ clases, cursoId }: { clases: ClaseListada[]; cursoId: string }) {
+export default function ClasesFiltradas({
+  clases,
+  cursoId,
+}: {
+  clases: ClaseListada[];
+  cursoId: string;
+}) {
   const [estado, setEstado] = useState<ClaveEstado | null>(null);
   const [q, setQ] = useState("");
+
+  // Cuántas clases hay en cada filtro: así se ve de una qué vale la pena tocar.
+  const conteos = useMemo(() => {
+    const acumulado: Partial<Record<ClaveEstado, number>> = {};
+    for (const clase of clases) {
+      const clave = claveEstado(clase);
+      if (clave) acumulado[clave] = (acumulado[clave] ?? 0) + 1;
+    }
+    return acumulado;
+  }, [clases]);
 
   const filtradas = useMemo(() => {
     const busqueda = q.trim().toLowerCase();
@@ -61,64 +77,64 @@ export default function ClasesFiltradas({ clases, cursoId }: { clases: ClaseList
 
   if (clases.length === 0) {
     return (
-      <div className="surface-card p-5 text-center text-sm text-slate-500">
-        Todavía no hay clases cargadas.
-      </div>
+      <EmptyState
+        icono={CalendarX2}
+        titulo="Todavía no hay clases cargadas"
+        descripcion="Agregá la primera clase de esta unidad con el botón de abajo."
+      />
     );
   }
 
   return (
     <div className="space-y-4">
-      <section className="surface-card p-5 sm:p-6">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar clase por tema"
-          className="input-shell mb-3 w-full"
-        />
+      <section className="card space-y-3 p-4 sm:p-5">
+        <SearchInput valor={q} onCambio={setQ} placeholder="Buscar clase por tema" />
 
-        <div className="flex flex-wrap gap-1.5">
-          <button type="button" onClick={() => setEstado(null)} className={pill(!estado)}>
-            Todas
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          <button type="button" onClick={() => setEstado(null)} className={`chip ${!estado ? "chip-activo" : ""}`}>
+            Todas <span className="opacity-70">{clases.length}</span>
           </button>
           {ESTADOS.map((e) => (
             <button
               key={e.value}
               type="button"
               onClick={() => setEstado(e.value)}
-              className={pill(estado === e.value)}
+              className={`chip ${estado === e.value ? "chip-activo" : ""}`}
             >
-              {e.label}
+              {e.label} <span className="opacity-70">{conteos[e.value] ?? 0}</span>
             </button>
           ))}
         </div>
       </section>
 
-      <section className="space-y-2 overflow-y-auto max-h-[300px]">
+      <section className="space-y-2.5">
         {filtradas.map((clase) => (
-          <div key={clase.id} className="block border border-slate-200 border-l-[3px] border-l-[#0f63ff] p-3 md:p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <Link href={`/cursos/${cursoId}/clase/${clase.id}`} className="flex-1">
-                <p className="text-sm font-semibold text-slate-900">
-                  <span className={clase.presentacion.colorTexto} title={clase.presentacion.etiqueta}>
-                    {clase.presentacion.icono}
-                  </span>{" "}
-                  {clase.titulo}
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {clase.fecha}
-                  {clase.horario}
-                  {" · "}
-                  <span className={clase.presentacion.colorTexto}>{clase.presentacion.etiqueta}</span>
-                </p>
-              </Link>
+          <Link
+            key={clase.id}
+            href={`/cursos/${cursoId}/clase/${clase.id}`}
+            className="card card-hover group flex items-center gap-3 border-l-[3px] border-l-brand-500 p-3.5"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="truncate text-sm font-bold text-ink-900 sm:text-base">{clase.titulo}</p>
+                <ClaseBadge presentacion={clase.presentacion} />
+              </div>
+              <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-500 sm:text-sm">
+                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-ink-400" />
+                {clase.fecha}
+                {clase.horario}
+              </p>
             </div>
-          </div>
+            <ChevronRight className="h-5 w-5 shrink-0 text-ink-300 transition group-hover:translate-x-0.5 group-hover:text-brand-600" />
+          </Link>
         ))}
+
         {filtradas.length === 0 && (
-          <div className="surface-card p-5 text-center text-sm text-slate-500">
-            No hay clases con estos filtros.
-          </div>
+          <EmptyState
+            icono={CalendarX2}
+            titulo="No hay clases con estos filtros"
+            descripcion="Probá con otro estado o limpiá la búsqueda."
+          />
         )}
       </section>
     </div>

@@ -1,10 +1,62 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   TOKENS DE DISEÑO
+   Se exponen a Tailwind con `@theme`, así se pueden usar como utilidades
+   (`bg-brand-600`, `text-ink-500`, `shadow-card`) en vez de repetir valores
+   sueltos en cada componente.
+   ========================================================================== */
+
+@theme {
+  --font-sans: var(--font-ibm-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Marca: índigo. Es el color de acción (botones, links, foco). */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
+
+  /* Texto y bordes: la escala de grises de toda la app. */
+  --color-ink-900: #0b1220;
+  --color-ink-800: #1e293b;
+  --color-ink-700: #334155;
+  --color-ink-600: #475569;
+  --color-ink-500: #64748b;
+  --color-ink-400: #94a3b8;
+  --color-ink-300: #cbd5e1;
+  --color-ink-200: #e2e8f0;
+  --color-ink-100: #eef2f7;
+  --color-ink-50: #f8fafc;
+
+  --color-linea: #e4e9f2;
+  --color-lienzo: #f5f7fb;
+
+  --radius-card: 1rem;
+  --radius-control: 0.625rem;
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.12);
+  --shadow-card-hover: 0 2px 4px rgba(15, 23, 42, 0.05), 0 18px 36px -16px rgba(79, 70, 229, 0.28);
+  --shadow-pop: 0 24px 60px -20px rgba(15, 23, 42, 0.35);
+
+  --ease-suave: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+
 :root {
-  --background: #f4f6fb;
-  --foreground: #111827;
-  --primary: #0f63ff;
-  --primary-soft: #eaf2ff;
+  --background: #f5f7fb;
+  --foreground: #0b1220;
+  --primary: #4f46e5;
+  --primary-soft: #eef2ff;
 }
 
 * {
@@ -13,241 +65,561 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  /* background: linear-gradient(135deg, #f6f8fc 0%, #eef4ff 100%); */
   color: var(--foreground);
-  font-family: var(--font-ibm-plex), sans-serif;
+  font-family: var(--font-ibm-plex), ui-sans-serif, system-ui, sans-serif;
+  background-color: var(--background);
+  /* Degradado muy suave: da profundidad sin competir con las tarjetas. */
+  background-image:
+    radial-gradient(1200px 600px at 15% -10%, rgba(99, 102, 241, 0.13), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(14, 165, 233, 0.1), transparent 55%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: #cfe0ff;
-  color: #06295c;
+  background: #c7d2fe;
+  color: #1e1b4b;
 }
 
 input,
 select,
 textarea {
-  color: #111827;
+  color: #0b1220;
+  font-family: inherit;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #6b7280;
+  color: #94a3b8;
 }
 
 button {
   cursor: pointer;
+  font-family: inherit;
+  /* Evita el retardo al tocar y el flash gris en el celular. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.primary-card {
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-left: 4px solid var(--primary);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 30px rgba(15, 99, 255, 0.06);
-  backdrop-filter: blur(12px);
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
-.surface-card {
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 30px rgba(15, 99, 255, 0.06);
-  backdrop-filter: blur(12px);
+/* Barras de scroll finas: los paneles internos dejan de verse pesados. */
+@supports (scrollbar-width: thin) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
 }
 
-.surface-card-hover {
-  transition: transform 200ms ease, box-shadow 200ms ease;
-}
-
-.surface-card-hover:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 40px rgba(15, 99, 255, 0.12);
-}
-
-.input-shell {
-  width: 100%;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  padding: 0.5rem 0.6rem;
-  font-size: 0.8rem;
-  color: #0f172a;
-  outline: none;
-  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
-}
-
-.input-shell:focus {
-  border-color: #0f63ff;
-  background: #ffffff;
-  box-shadow: 0 0 0 2px rgba(15, 99, 255, 0.2);
-}
-
-textarea.input-shell {
-  resize: none;
-}
-
-/**
- * Opción de una lista de radios, con la misma piel que `.input-shell`.
- * Es la alternativa al `<select>` cuando las etiquetas son largas: un select
- * nativo cerrado recorta el texto en una sola línea y en el celular no hay
- * forma de leer la opción entera; acá el nombre se envuelve completo.
- */
-.option-shell {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  padding: 0.5rem 0.6rem;
-  font-size: 0.8rem;
-  color: #0f172a;
-  cursor: pointer;
-  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
-}
-
-.option-shell:has(input:checked) {
-  border-color: #0f63ff;
-  background: #ffffff;
-}
-
-.option-shell:has(input:focus-visible) {
-  border-color: #0f63ff;
-  box-shadow: 0 0 0 2px rgba(15, 99, 255, 0.2);
-}
-
-.option-shell input {
-  margin-top: 0.15rem;
-  flex-shrink: 0;
-  accent-color: #0f63ff;
-}
-
-.border-primary {
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-left: 4px solid var(--primary);
-}
-
-.border-primary:hover {
-  border-color: rgba(15, 99, 255, 0.4);
-  border-left: 4px solid var(--primary);
-}
-
-.button-primary {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  justify-content: center;
-  background: #0f63ff;
-  padding: 0.55rem 0.7rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #ffffff;
-  box-shadow: 0 1px 2px rgba(15, 99, 255, 0.12);
-  transition: background-color 150ms ease;
-  cursor: pointer;
-}
-
-.button-primary:hover {
-  background: #0b4bc4;
-}
-
-.button-primary:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.button-secondary {
-  display: inline-flex;
-  white-space: nowrap;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  padding: 0.55rem 0.7rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #334155;
-  transition: border-color 150ms ease, color 150ms ease;
-  cursor: pointer;
-}
-
-.button-secondary:hover {
-  border-color: rgba(15, 99, 255, 0.4);
-  color: #0f63ff;
-}
-
-.button-delete {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  justify-content: center;
-  background: #fee2e2;
-  border: 1px solid #fecaca;
-  padding: 0.55rem 0.7rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #dc2626;
-  box-shadow: 0 1px 2px rgba(15, 99, 255, 0.12);
-  transition: background-color 150ms ease;
-  cursor: pointer;
-}
-
-.button-delete:hover {
-  background: #fca5a5;
-}
-
-.page-title {
-  font-size: 1.45rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: #0f172a;
-}
-
-.page-subtitle {
-  font-size: 0.95rem;
-  color: #64748b;
-}
-
-.section-title {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: #64748b;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 9999px;
-  border: 1px solid #e2e8f0;
-  background: #f1f5f9;
-  padding: 0.35rem 0.65rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #64748b;
-}
-
-@media (width >= 40rem /* 640px */) {
-  .button-primary, .button-secondary, .button-delete {
-    font-size: 0.9rem;
-    padding: 0.6rem 0.8rem;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ==========================================================================
+   COMPONENTES
+   Van en `@layer components` a propósito: así cualquier utilidad de Tailwind
+   que se agregue en el `className` (`p-6`, `text-base`, `rounded-full`) le gana
+   a la clase, y no al revés.
+   ========================================================================== */
+
+@layer components {
+  /* --- Superficies ------------------------------------------------------ */
+
+  .card {
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-linea);
+    background: #ffffff;
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-hover {
+    transition: transform 220ms var(--ease-suave), box-shadow 220ms var(--ease-suave),
+      border-color 220ms var(--ease-suave);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-brand-200);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .card-hover:active {
+    transform: translateY(0);
+  }
+
+  /* Tarjeta destacada: la barra de color la marca como la sección principal
+     de la pantalla (el encabezado de página, la sección de hoy). */
+  .card-destacada {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-linea);
+    background: #ffffff;
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-destacada::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--color-brand-500);
+  }
+
+  /* Recuadro punteado para estados vacíos. */
+  .vacio {
+    border-radius: var(--radius-card);
+    border: 1px dashed var(--color-ink-300);
+    background: rgba(248, 250, 252, 0.8);
+    color: var(--color-ink-500);
+    text-align: center;
+  }
+
+  /* Cuadradito con ícono que encabeza cada sección. */
+  .icono-seccion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(140deg, var(--color-brand-500), var(--color-brand-700));
+    color: #ffffff;
+    box-shadow: 0 6px 16px -8px rgba(79, 70, 229, 0.8);
+  }
+
+  /* --- Tipografía ------------------------------------------------------- */
+
   .page-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-ink-900);
+    text-wrap: balance;
+  }
+
+  .page-subtitle {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--color-ink-500);
+  }
+
+  .card-title {
+    font-size: 1.05rem;
+    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-ink-900);
+  }
+
+  .card-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: var(--color-ink-500);
+  }
+
+  .section-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink-400);
+  }
+
+  .numero-grande {
+    font-size: 1.6rem;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-ink-900);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Controles de formulario ------------------------------------------ */
+
+  .input-shell {
+    display: block;
+    width: 100%;
+    min-height: 2.75rem;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-ink-200);
+    background: #ffffff;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-ink-900);
+    outline: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  }
+
+  .input-shell:hover:not(:disabled):not(:focus) {
+    border-color: var(--color-ink-300);
+  }
+
+  .input-shell:focus {
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  }
+
+  .input-shell:disabled,
+  .input-shell[readonly] {
+    background: var(--color-ink-50);
+    color: var(--color-ink-500);
+    cursor: not-allowed;
+  }
+
+  textarea.input-shell {
+    resize: none;
+    line-height: 1.6;
+  }
+
+  select.input-shell {
+    /* Flecha propia: la nativa cambia de forma en cada navegador. */
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    padding-right: 2.25rem;
+  }
+
+  /**
+   * Opción de una lista de radios, con la misma piel que `.input-shell`.
+   * Es la alternativa al `<select>` cuando las etiquetas son largas: un select
+   * nativo cerrado recorta el texto en una sola línea y en el celular no hay
+   * forma de leer la opción entera; acá el nombre se envuelve completo.
+   */
+  .option-shell {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-ink-200);
+    background: #ffffff;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-ink-700);
+    cursor: pointer;
+    transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .option-shell:hover {
+    border-color: var(--color-brand-200);
+    background: var(--color-brand-50);
+  }
+
+  .option-shell:has(input:checked) {
+    border-color: var(--color-brand-500);
+    background: var(--color-brand-50);
+    color: var(--color-brand-800);
+    font-weight: 600;
+  }
+
+  .option-shell:has(input:focus-visible) {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  }
+
+  .option-shell input {
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+    accent-color: var(--color-brand-600);
+  }
+
+  .field-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--color-ink-600);
+  }
+
+  /* --- Botones ---------------------------------------------------------- */
+
+  .button-primary,
+  .button-secondary,
+  .button-delete,
+  .button-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    white-space: nowrap;
+    min-height: 2.6rem;
+    border-radius: var(--radius-control);
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease,
+      box-shadow 160ms ease, transform 160ms var(--ease-suave);
+  }
+
+  .button-primary {
+    border: 1px solid transparent;
+    background: var(--color-brand-600);
+    color: #ffffff;
+    box-shadow: 0 8px 18px -10px rgba(79, 70, 229, 0.9);
+  }
+
+  .button-primary:hover {
+    background: var(--color-brand-700);
+  }
+
+  .button-secondary {
+    border: 1px solid var(--color-ink-200);
+    background: #ffffff;
+    color: var(--color-ink-700);
+  }
+
+  .button-secondary:hover {
+    border-color: var(--color-brand-300);
+    background: var(--color-brand-50);
+    color: var(--color-brand-700);
+  }
+
+  .button-ghost {
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--color-ink-600);
+  }
+
+  .button-ghost:hover {
+    background: var(--color-ink-100);
+    color: var(--color-ink-900);
+  }
+
+  .button-delete {
+    border: 1px solid #fecdd3;
+    background: #fff1f2;
+    color: #be123c;
+  }
+
+  .button-delete:hover {
+    border-color: #fda4af;
+    background: #ffe4e6;
+  }
+
+  .button-primary:active,
+  .button-secondary:active,
+  .button-delete:active,
+  .button-ghost:active {
+    transform: translateY(1px);
+  }
+
+  .button-primary:disabled,
+  .button-secondary:disabled,
+  .button-delete:disabled,
+  .button-ghost:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+  }
+
+  /* --- Etiquetas y filtros --------------------------------------------- */
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 9999px;
+    border: 1px solid var(--color-ink-200);
+    background: var(--color-ink-50);
+    padding: 0.25rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-ink-600);
+    white-space: nowrap;
+  }
+
+  .pill-brand {
+    border-color: var(--color-brand-200);
+    background: var(--color-brand-50);
+    color: var(--color-brand-700);
+  }
+
+  /* Píldora de filtro: sirve tanto para `<button>` como para `<a>`. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 9999px;
+    border: 1px solid var(--color-ink-200);
+    background: #ffffff;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--color-ink-600);
+    cursor: pointer;
+    transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+  }
+
+  .chip:hover {
+    border-color: var(--color-brand-300);
+    color: var(--color-brand-700);
+  }
+
+  .chip-activo {
+    border-color: transparent;
+    background: var(--color-brand-600);
+    color: #ffffff;
+    box-shadow: 0 6px 14px -8px rgba(79, 70, 229, 0.9);
+  }
+
+  .chip-activo:hover {
+    background: var(--color-brand-700);
+    color: #ffffff;
+  }
+
+  /* --- Paneles desplegables (`<details>`) ------------------------------- */
+
+  .disclosure {
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-linea);
+    background: var(--color-ink-50);
+    transition: border-color 160ms ease, background-color 160ms ease;
+  }
+
+  .disclosure[open] {
+    border-color: var(--color-brand-200);
+    background: #ffffff;
+  }
+
+  .disclosure > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
+    cursor: pointer;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink-700);
+    border-radius: var(--radius-control);
+  }
+
+  .disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .disclosure > summary:hover {
+    color: var(--color-brand-700);
+  }
+
+  .disclosure-chevron {
+    margin-left: auto;
+    flex-shrink: 0;
+    color: var(--color-ink-400);
+    transition: transform 200ms var(--ease-suave);
+  }
+
+  .disclosure[open] > summary .disclosure-chevron {
+    transform: rotate(180deg);
+    color: var(--color-brand-600);
+  }
+
+  .disclosure-cuerpo {
+    padding: 0 0.9rem 0.9rem;
+  }
+
+  /* --- Varios ----------------------------------------------------------- */
+
+  .skeleton {
+    border-radius: var(--radius-control);
+    background: linear-gradient(90deg, #eef2f7 25%, #e2e8f0 37%, #eef2f7 63%);
+    background-size: 400% 100%;
+    animation: skeleton-brillo 1.4s ease infinite;
+  }
+
+  .link-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-brand-600);
+    transition: color 160ms ease;
+  }
+
+  .link-brand:hover {
+    color: var(--color-brand-800);
+  }
+}
+
+@keyframes skeleton-brillo {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animar-entrada {
+  animation: aparecer 260ms var(--ease-suave) both;
+}
+
+/* ==========================================================================
+   AJUSTES POR TAMAÑO DE PANTALLA
+   ========================================================================== */
+
+@media (width >= 40rem /* 640px */) {
+  .page-title {
+    font-size: 1.85rem;
   }
 
   .page-subtitle {
     font-size: 1rem;
   }
 
-  .input-shell {
+  .card-title {
+    font-size: 1.15rem;
+  }
+
+  .card-subtitle {
     font-size: 0.9rem;
   }
 
-  .option-shell {
-    font-size: 0.9rem;
+  .numero-grande {
+    font-size: 1.9rem;
+  }
+
+  .icono-seccion {
+    width: 2.75rem;
+    height: 2.75rem;
   }
 }

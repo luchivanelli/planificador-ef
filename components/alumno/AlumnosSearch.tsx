@@ -1,8 +1,12 @@
 "use client";
+
 import React, { useMemo, useState } from "react";
-import { Info, FileText } from "lucide-react";
+import { FileText, Pencil, UserRound } from "lucide-react";
 import EditarAlumnoForm from "@/components/alumno/EditarAlumnoForm";
 import ObservacionesAlumnoForm from "@/components/alumno/ObservacionesAlumnoForm";
+import Avatar from "@/components/ui/Avatar";
+import EmptyState from "@/components/ui/EmptyState";
+import SearchInput from "@/components/ui/SearchInput";
 
 type Alumno = {
   id: string;
@@ -42,49 +46,13 @@ export default function AlumnosSearch({ alumnos, cursoId }: { alumnos: Alumno[];
   }, [q, alumnos]);
 
   const selectedAlumno = selectedAlumnoId ? alumnos.find((a) => a.id === selectedAlumnoId) : null;
-  const selectedObservacion = selectedObservacionId ? alumnos.find((a) => a.id === selectedObservacionId) : null;
+  const selectedObservacion = selectedObservacionId
+    ? alumnos.find((a) => a.id === selectedObservacionId)
+    : null;
 
   return (
-    <div>
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Buscar alumnos por nombre o apellido"
-        className="input-shell mb-4 w-full"
-      />
-
-      <ul className="mb-4 space-y-2.5 overflow-y-auto max-h-[250px]">
-        {filtered.length === 0 ? (
-          <p className="text-sm text-slate-500">No se encontraron alumnos.</p>
-        ) : (
-          filtered.map((a) => (
-            <li
-              key={a.id}
-              className="flex justify-between items-center text-sm sm:text-base text-slate-700 border-b border-slate-200 px-1"
-            >
-              <span>{a.apellido}, {a.nombre}</span>
-              <div className="flex gap-1.5 sm:gap-2">
-                <button
-                  type="button"
-                  className="flex items-center justify-center rounded-full p-1 hover:bg-slate-100"
-                  onClick={() => setSelectedAlumnoId((current) => (current === a.id ? null : a.id))}
-                  aria-label="Editar alumno"
-                >
-                  <Info className="h-3.5 sm:h-4.5 w-3.5 sm:w-4.5 text-[#0f63ff]" />
-                </button>
-                <button
-                  type="button"
-                  className="flex items-center justify-center rounded-full p-1 hover:bg-slate-100"
-                  onClick={() => setSelectedObservacionId((current) => (current === a.id ? null : a.id))}
-                  aria-label="Seguimiento y observaciones del alumno"
-                >
-                  <FileText className="h-3.5 sm:h-4.5 w-3.5 sm:w-4.5 text-[#0f63ff]" />
-                </button>
-              </div>
-            </li>
-          ))
-        )}
-      </ul>
+    <div className="space-y-3">
+      <SearchInput valor={q} onCambio={setQ} placeholder="Buscar alumno por nombre o apellido" />
 
       {selectedAlumno && (
         // El `key` remonta el formulario al cambiar de alumno, así arranca con
@@ -108,6 +76,76 @@ export default function AlumnosSearch({ alumnos, cursoId }: { alumnos: Alumno[];
           cursoId={cursoId}
           onCerrar={() => setSelectedObservacionId(null)}
         />
+      )}
+
+      {filtered.length === 0 ? (
+        <EmptyState
+          icono={UserRound}
+          titulo={q ? "No se encontraron alumnos" : "Todavía no hay alumnos"}
+          descripcion={
+            q
+              ? "Probá con otro nombre o apellido."
+              : "Agregá alumnos al curso para poder tomar asistencia y evaluar."
+          }
+        />
+      ) : (
+        <ul className="divide-y divide-linea overflow-hidden rounded-control border border-linea">
+          {filtered.map((a) => {
+            const editando = selectedAlumnoId === a.id;
+            const observando = selectedObservacionId === a.id;
+
+            return (
+              <li
+                key={a.id}
+                className={`flex items-center gap-3 px-3 py-2.5 transition ${
+                  editando || observando ? "bg-brand-50/60" : "bg-white hover:bg-ink-50"
+                }`}
+              >
+                <Avatar nombre={`${a.nombre} ${a.apellido}`} tamanio="sm" />
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-ink-800">
+                    {a.apellido}, {a.nombre}
+                  </p>
+                  {a.observaciones && (
+                    <p className="truncate text-xs text-ink-400">Con observaciones cargadas</p>
+                  )}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    title="Editar datos del alumno"
+                    aria-label={`Editar datos de ${a.nombre} ${a.apellido}`}
+                    onClick={() => setSelectedAlumnoId((current) => (current === a.id ? null : a.id))}
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
+                      editando
+                        ? "border-brand-300 bg-brand-100 text-brand-700"
+                        : "border-ink-200 bg-white text-ink-500 hover:border-brand-300 hover:text-brand-600"
+                    }`}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    title="Seguimiento y observaciones"
+                    aria-label={`Observaciones de ${a.nombre} ${a.apellido}`}
+                    onClick={() =>
+                      setSelectedObservacionId((current) => (current === a.id ? null : a.id))
+                    }
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
+                      observando
+                        ? "border-brand-300 bg-brand-100 text-brand-700"
+                        : "border-ink-200 bg-white text-ink-500 hover:border-brand-300 hover:text-brand-600"
+                    }`}
+                  >
+                    <FileText className="h-4 w-4" />
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );

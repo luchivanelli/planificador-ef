@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { actualizarAlumno } from "@/lib/actions/curso.actions";
 import { alumnoSchema } from "@/lib/schemas/curso.schema";
@@ -58,32 +59,46 @@ export default function EditarAlumnoForm({
   );
 
   return (
-    <div className="surface-card border border-slate-200 bg-slate-50 p-4 mb-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <p className="text-sm sm:text-base font-semibold text-slate-900">Editar alumno</p>
-          <p className="text-xs sm:text-sm text-slate-500">Edita la información del alumno: <strong className="text-[#0f63ff] font-normal">{alumno.nombre} {alumno.apellido}</strong></p>
+    <div className="animar-entrada rounded-control border border-brand-200 bg-brand-50/50 p-4">
+      <div className="mb-3 flex items-start gap-2.5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-brand-600">
+          <Pencil className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-ink-900">Editar alumno</p>
+          <p className="text-xs text-ink-500 sm:text-sm">
+            Datos de{" "}
+            <span className="font-semibold text-brand-700">
+              {alumno.nombre} {alumno.apellido}
+            </span>
+          </p>
         </div>
       </div>
 
-      <form onSubmit={onSubmit} noValidate className="grid gap-3">
-        <Campo label="Nombre" error={errors.nombre?.message} className="col-span-2 lg:col-span-1">
-          <input {...register("nombre")} placeholder="Ej: Juan" className="input-shell w-full" />
+      <form onSubmit={onSubmit} noValidate className="grid gap-3 sm:grid-cols-2">
+        <Campo label="Nombre" error={errors.nombre?.message}>
+          <input {...register("nombre")} placeholder="Ej: Juan" className="input-shell" />
         </Campo>
-        <Campo label="Apellido" error={errors.apellido?.message} className="col-span-2 lg:col-span-1">
-          <input {...register("apellido")} placeholder="Ej: Perez" className="input-shell w-full" />
+        <Campo label="Apellido" error={errors.apellido?.message}>
+          <input {...register("apellido")} placeholder="Ej: Perez" className="input-shell" />
         </Campo>
-        <Campo label="Contacto de emergencia" error={errors.contactoEmergencia?.message} className="col-span-2 lg:col-span-1">
+        <Campo
+          label="Contacto de emergencia"
+          error={errors.contactoEmergencia?.message}
+          className="sm:col-span-2"
+        >
           <input
             {...register("contactoEmergencia")}
             placeholder="Padre, madre o tutor"
-            className="input-shell w-full"
+            className="input-shell"
           />
         </Campo>
 
-        <ErrorGeneral mensaje={errors.root?.message} />
+        <div className="sm:col-span-2">
+          <ErrorGeneral mensaje={errors.root?.message} />
+        </div>
 
-        <div className="flex flex-wrap gap-2 col-span-2 mt-2 justify-end">
+        <div className="flex flex-wrap justify-end gap-2 sm:col-span-2">
           <BotonEnviar enviando={isSubmitting} textoEnviando="Guardando..." className="button-primary">
             Guardar
           </BotonEnviar>

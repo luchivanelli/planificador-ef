@@ -17,13 +17,28 @@ export const nivelLogroSchema = z.coerce
   .min(NIVEL_MINIMO, { error: MENSAJE_NIVEL })
   .max(NIVEL_MAXIMO, { error: MENSAJE_NIVEL });
 
+/** Los indicadores tienen los mismos límites al crear y al editar la rúbrica. */
+const listaIndicadores = <S extends z.ZodType>(indicador: S) =>
+  z
+    .array(indicador)
+    .min(1, "Agregá al menos un indicador")
+    .max(20, "No podés cargar más de 20 indicadores");
+
+const indicadorSchema = z.object({ nombre: textoRequerido("El indicador", 200) });
+
 // La clase no viaja en el formulario: la acción la toma de la URL.
 export const rubricaSchema = z.object({
   nombre: textoRequerido("El nombre de la rúbrica", 120),
-  indicadores: z
-    .array(z.object({ nombre: textoRequerido("El indicador", 200) }))
-    .min(1, "Agregá al menos un indicador")
-    .max(20, "No podés cargar más de 20 indicadores"),
+  indicadores: listaIndicadores(indicadorSchema),
+});
+
+/**
+ * Al editar, los indicadores que ya existen viajan con su `id` para conservarlos
+ * (y con ellos lo que se evaluó con ellos). Los que llegan sin `id` son nuevos, y
+ * los que el formulario ya no manda se borran.
+ */
+export const rubricaEdicionSchema = rubricaSchema.extend({
+  indicadores: listaIndicadores(indicadorSchema.extend({ id: z.string().optional() })),
 });
 
 /**
@@ -39,4 +54,5 @@ export const evaluacionSchema = z.object({
 
 export type NivelLogro = z.infer<typeof nivelLogroSchema>;
 export type RubricaInput = z.infer<typeof rubricaSchema>;
+export type RubricaEdicionInput = z.infer<typeof rubricaEdicionSchema>;
 export type EvaluacionInput = z.infer<typeof evaluacionSchema>;

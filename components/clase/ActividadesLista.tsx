@@ -19,7 +19,9 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { ListOrdered } from "lucide-react";
 import ActividadItem, { type ActividadListada } from "@/components/clase/ActividadItem";
+import EmptyState from "@/components/ui/EmptyState";
 import type { JuegoOpcion } from "@/components/clase/ActividadForm";
 import { reordenarActividades } from "@/lib/actions/clases.actions";
 
@@ -97,9 +99,11 @@ export default function ActividadesLista({
 
   if (items.length === 0) {
     return (
-      <div className="border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-        Todavía no hay actividades cargadas.
-      </div>
+      <EmptyState
+        icono={ListOrdered}
+        titulo="Todavía no hay actividades"
+        descripcion="Armá la secuencia de la clase: entrada en calor, desarrollo y vuelta a la calma."
+      />
     );
   }
 
@@ -111,7 +115,7 @@ export default function ActividadesLista({
       onDragEnd={alSoltar}
     >
       <SortableContext items={items.map((a) => a.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {items.map((actividad, indice) => (
             <ActividadItem
               key={actividad.id}

@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requerirDocente, verificarPropietarioCurso } from "@/lib/auth";
-import { evaluacionSchema, rubricaSchema } from "@/lib/schemas/evaluacion.schema";
+import {
+  evaluacionSchema,
+  rubricaEdicionSchema,
+  rubricaSchema,
+} from "@/lib/schemas/evaluacion.schema";
 import { aTextoONull } from "@/lib/schemas/common";
 import {
   exito,
@@ -59,6 +63,76 @@ export async function crearRubrica(
       },
     },
   });
+
+  revalidatePath(rutaEvaluacion(cursoId, claseId));
+  return exito();
+}
+
+/**
+ * Se conservan los indicadores que llegan con `id` (así sobrevive lo evaluado con
+ * ellos), se crean los nuevos y se borran los que el formulario ya no manda.
+ */
+export async function actualizarRubrica(
+  rubricaId: string,
+  cursoId: string,
+  claseId: string,
+  input: unknown
+): Promise<ResultadoAccion> {
+  const docente = await requerirDocente();
+
+  try {
+    await verificarPropietarioCurso(cursoId, docente.id);
+  } catch (error) {
+    return fallo(mensajeDeError(error, "No tenés permiso sobre este curso"));
+  }
+
+  const validado = validarPayload(rubricaEdicionSchema, input);
+  if (!validado.ok) return validado;
+
+  const { nombre, indicadores } = validado.data;
+
+  // La rúbrica es de la clase: alcanza con exigir que sea la de esta URL, ya
+  // verificada como parte del curso del docente.
+  const rubrica = await db.rubrica.findFirst({
+    where: { id: rubricaId, claseId, clase: { unidadDidactica: { planificacion: { cursoId } } } },
+    include: { indicadores: { select: { id: true } } },
+  });
+  if (!rubrica) {
+    return fallo("La rúbrica no existe o no es de esta clase");
+  }
+
+  // El formulario es dinámico: se controla que los `id` que manda sean de esta
+  // rúbrica y no de otra.
+  const idsDeRubrica = new Set(rubrica.indicadores.map((indicador) => indicador.id));
+  const existentes = indicadores.filter((indicador) => indicador.id);
+
+  if (existentes.some((indicador) => !idsDeRubrica.has(indicador.id!))) {
+    return fallo("Hay indicadores que no pertenecen a esta rúbrica");
+  }
+
+  const idsConservados = new Set(existentes.map((indicador) => indicador.id!));
+  const idsABorrar = [...idsDeRubrica].filter((id) => !idsConservados.has(id));
+  const nuevos = indicadores.filter((indicador) => !indicador.id);
+
+  // Todo en una transacción: si algo falla, la rúbrica no queda a medio editar.
+  await db.$transaction([
+    ...(idsABorrar.length
+      ? [db.rubricaIndicador.deleteMany({ where: { id: { in: idsABorrar }, rubricaId } })]
+      : []),
+    ...existentes.map((indicador) =>
+      db.rubricaIndicador.update({
+        where: { id: indicador.id },
+        data: { nombre: indicador.nombre },
+      })
+    ),
+    db.rubrica.update({
+      where: { id: rubricaId },
+      data: {
+        nombre,
+        indicadores: { create: nuevos.map((indicador) => ({ nombre: indicador.nombre })) },
+      },
+    }),
+  ]);
 
   revalidatePath(rutaEvaluacion(cursoId, claseId));
   return exito();

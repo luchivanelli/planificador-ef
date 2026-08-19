@@ -1,9 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Pause, Play, RotateCcw } from "lucide-react";
 
-export default function Cronometro({ duracionMinutos, titulo }: { duracionMinutos: number; titulo: string }) {
-  const [segundos, setSegundos] = useState(duracionMinutos * 60);
+/**
+ * Cuenta hacia atrás la duración de un bloque de la clase. Vive dentro de cada
+ * actividad: durante la clase, la docente arranca el bloque y ve el tiempo que
+ * queda sin salir de la pantalla.
+ */
+export default function Cronometro({
+  duracionMinutos,
+  titulo,
+}: {
+  duracionMinutos: number;
+  titulo: string;
+}) {
+  const totalSegundos = Math.max(1, duracionMinutos * 60);
+  const [segundos, setSegundos] = useState(totalSegundos);
   const [corriendo, setCorriendo] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -29,37 +42,62 @@ export default function Cronometro({ duracionMinutos, titulo }: { duracionMinuto
   const minutos = Math.floor(segundos / 60);
   const segs = segundos % 60;
   const terminado = segundos === 0;
+  const progreso = Math.round(((totalSegundos - segundos) / totalSegundos) * 100);
 
   return (
-    <div className="rounded-xl bg-teal-50 p-4 border border-teal-100">
-      <p className="text-xs font-medium text-teal-700 uppercase tracking-wide mb-1">Cronómetro</p>
-      <p className="text-sm font-medium text-gray-800 mb-3">{titulo}</p>
-      <div className="flex items-center justify-between">
-        <span className={`text-3xl font-semibold tabular-nums ${terminado ? "text-red-500" : "text-gray-900"}`}>
-          {minutos}:{segs.toString().padStart(2, "0")}
-        </span>
-        <div className="flex gap-2">
+    <div
+      className={`rounded-control border p-3 ${
+        terminado ? "border-rose-200 bg-rose-50" : "border-brand-100 bg-brand-50/70"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="section-title">Cronómetro</p>
+          <p className="mt-0.5 truncate text-xs font-semibold text-ink-700">{titulo}</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span
+            className={`font-mono text-2xl font-bold tabular-nums ${
+              terminado ? "text-rose-600" : "text-ink-900"
+            }`}
+          >
+            {minutos}:{segs.toString().padStart(2, "0")}
+          </span>
+
           <button
             type="button"
             onClick={() => setCorriendo((c) => !c)}
             disabled={terminado}
-            className="w-10 h-10 rounded-full bg-teal-600 text-white flex items-center justify-center disabled:opacity-40"
+            aria-label={corriendo ? "Pausar" : "Iniciar"}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white shadow-[0_8px_18px_-10px_rgba(79,70,229,0.9)] transition hover:bg-brand-700 disabled:opacity-40"
           >
-            {corriendo ? "❚❚" : "▶"}
+            {corriendo ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </button>
           <button
             type="button"
             onClick={() => {
               setCorriendo(false);
-              setSegundos(duracionMinutos * 60);
+              setSegundos(totalSegundos);
             }}
-            className="w-10 h-10 rounded-full bg-white border border-teal-200 text-teal-700 flex items-center justify-center"
+            aria-label="Reiniciar"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 transition hover:border-brand-300 hover:text-brand-700"
           >
-            ↺
+            <RotateCcw className="h-4 w-4" />
           </button>
         </div>
       </div>
-      {terminado && <p className="text-xs text-red-500 mt-2">Tiempo cumplido</p>}
+
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white">
+        <div
+          className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${
+            terminado ? "bg-rose-500" : "bg-brand-500"
+          }`}
+          style={{ width: `${progreso}%` }}
+        />
+      </div>
+
+      {terminado && <p className="mt-2 text-xs font-semibold text-rose-600">¡Tiempo cumplido!</p>}
     </div>
   );
 }

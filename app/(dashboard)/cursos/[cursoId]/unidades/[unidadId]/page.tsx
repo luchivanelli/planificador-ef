@@ -1,14 +1,17 @@
 import { notFound } from "next/navigation";
+import { CalendarPlus, CalendarRange, CheckCircle2, ClipboardList, Pencil, Target } from "lucide-react";
 import { db } from "@/lib/db";
 import { requerirDocente } from "@/lib/auth";
 import { ejesDelCurso, marcarClasesDictadas } from "@/lib/clases/consultas";
 import { presentacionClase } from "@/lib/clases/estado";
-import BackLink from "@/components/BackLink";
 import { GenericToast } from "@/components/GenericToast";
 import AddClaseForm from "@/components/clase/AddClaseForm";
 import ClasesFiltradas from "@/components/clase/ClasesFiltradas";
 import UnidadForm from "@/components/planificacion y unidades/UnidadForm";
 import ListaItems from "@/components/ListaItems";
+import Disclosure from "@/components/ui/Disclosure";
+import PageHeader from "@/components/ui/PageHeader";
+import StatTile from "@/components/ui/StatTile";
 import { aFechaLegible, aValorFecha, resumenLista } from "@/lib/schemas/common";
 
 export default async function UnidadDidacticaPage({
@@ -54,23 +57,40 @@ export default async function UnidadDidacticaPage({
     ),
   }));
 
+  const dictadas = clases.filter((c) => c.presentacion.etiqueta === "Dictada").length;
+  const sinCerrar = clases.filter((c) => c.presentacion.requiereAtencion).length;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 sm:space-y-5">
       <GenericToast visible={created === "true"} message="Planificación creada correctamente" />
       <GenericToast visible={updated === "true"} message="Planificación actualizada correctamente" />
       <GenericToast visible={deletedClase === "true"} message="Clase eliminada correctamente" />
-      <section className="surface-card p-5 sm:p-6">
-        <BackLink href={`/cursos/${cursoId}`} title={`Volver a ${unidad.planificacion.curso.nombre}`}/>
-        <h1 className="page-title">{unidad.titulo}</h1>
-        <ListaItems valor={unidad.objetivo} className="text-sm text-slate-500 sm:text-base" />
-        <p className="mt-2 text-sm text-slate-500">
-          Del {aFechaLegible(unidad.fechaInicio)} al {aFechaLegible(unidad.fechaFin)}
-        </p>
 
-        <details className="surface-card py-2 px-4 mt-4">
-          <summary className="cursor-pointer text-sm font-semibold text-slate-900 sm:text-base">
-            Editar unidad
-          </summary>
+      <PageHeader
+        volverA={`/cursos/${cursoId}`}
+        volverTitulo={`Volver a ${curso.nombre}`}
+        titulo={unidad.titulo}
+        etiquetas={
+          <>
+            <span className="pill pill-brand">
+              <CalendarRange className="h-3.5 w-3.5" />
+              {aFechaLegible(unidad.fechaInicio)} — {aFechaLegible(unidad.fechaFin)}
+            </span>
+            <span className="pill">{curso.nombre}</span>
+          </>
+        }
+      >
+        {unidad.objetivo && (
+          <div className="mt-4 rounded-control border border-dashed border-ink-200 bg-ink-50/70 p-3.5">
+            <p className="section-title flex items-center gap-1.5">
+              <Target className="h-3.5 w-3.5 text-brand-500" />
+              Objetivos de la unidad
+            </p>
+            <ListaItems valor={unidad.objetivo} className="mt-1.5 text-sm text-ink-700 sm:text-base" />
+          </div>
+        )}
+
+        <Disclosure titulo="Editar unidad" icono={Pencil} className="mt-3">
           <UnidadForm
             unidad={{
               id: unidad.id,
@@ -82,15 +102,25 @@ export default async function UnidadDidacticaPage({
             cursoId={cursoId}
             planificacionId={unidad.planificacionId}
           />
-        </details>
+        </Disclosure>
+      </PageHeader>
+
+      <section className="grid grid-cols-3 gap-3">
+        <StatTile icono={CalendarRange} valor={clases.length} etiqueta="Clases" tono="brand" />
+        <StatTile icono={CheckCircle2} valor={dictadas} etiqueta="Dictadas" tono="esmeralda" />
+        <StatTile
+          icono={ClipboardList}
+          valor={sinCerrar}
+          etiqueta="Sin cerrar"
+          tono={sinCerrar > 0 ? "ambar" : "cielo"}
+        />
       </section>
 
       <ClasesFiltradas clases={clases} cursoId={cursoId} />
 
-      <details className="surface-card p-5">
-        <summary className="cursor-pointer text-sm font-semibold text-slate-900 sm:text-base">Agregar clase</summary>
+      <Disclosure titulo="Agregar clase a esta unidad" icono={CalendarPlus} tono="accion">
         <AddClaseForm unidadId={unidadId} cursoId={cursoId} ejes={ejes} />
-      </details>
+      </Disclosure>
     </div>
   );
 }

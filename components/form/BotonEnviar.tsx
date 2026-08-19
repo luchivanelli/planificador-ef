@@ -1,3 +1,4 @@
+import { Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 /**
@@ -30,7 +31,14 @@ export default function BotonEnviar({
       form={form}
       className={`${className ?? ""} disabled:cursor-not-allowed disabled:opacity-60`}
     >
-      {enviando ? textoEnviando : children}
+      {enviando ? (
+        <>
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+          {textoEnviando}
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,6 +9,7 @@ import BackLink from "@/components/BackLink";
 import { Campo, ErrorGeneral } from "@/components/form/Campo";
 import BotonEnviar from "@/components/form/BotonEnviar";
 import TextareaLista from "@/components/form/TextareaLista";
+import SectionCard from "@/components/ui/SectionCard";
 import { AYUDA_LISTA } from "@/lib/form/ayudas";
 import { unidadDidacticaSchema } from "@/lib/schemas/planificacion.schema";
 import { enviarFormulario } from "@/lib/form/enviar-formulario";
@@ -47,22 +49,16 @@ export default function AddUnidadForm({ planificacionId, cursoId, planificacion 
   );
 
   return (
-    <div className="mx-auto max-w-xl">
-      <section className="surface-card p-5 sm:p-6">
-        <BackLink href={`/cursos/${cursoId}`} title="Volver al curso" />
-        <div className="mb-4 flex items-start gap-4 sm:items-center">
-          <div className="bg-[#0f63ff]/10 p-2.5 text-[#0f63ff]">
-            <FilePlus2 className="h-5 w-5 sm:h-6 sm:w-6" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">Nueva unidad didáctica</h1>
-            <p className="text-sm text-slate-500 sm:text-base">
-              Crea una unidad para el curso {planificacion.curso.nombre}
-            </p>
-          </div>
-        </div>
+    <div className="mx-auto max-w-2xl">
+      <BackLink href={`/cursos/${cursoId}`} title="Volver al curso" />
 
-        <form onSubmit={onSubmit} noValidate className="space-y-3">
+      <SectionCard
+        destacada
+        icono={FilePlus2}
+        titulo="Nueva unidad didáctica"
+        subtitulo={`Curso ${planificacion.curso.nombre} · planificación ${planificacion.anio}`}
+      >
+        <form onSubmit={onSubmit} noValidate className="space-y-4">
           <Campo label="Título" error={errors.titulo?.message}>
             <input
               {...register("titulo")}
@@ -70,25 +66,37 @@ export default function AddUnidadForm({ planificacionId, cursoId, planificacion 
               className="input-shell"
             />
           </Campo>
+
           <Campo label="Objetivos" error={errors.objetivo?.message} hint={AYUDA_LISTA}>
-            <TextareaLista control={control} name="objetivo" className="input-shell min-h-[92px] w-full" />
+            <TextareaLista control={control} name="objetivo" className="input-shell min-h-24" />
           </Campo>
-          <div className="grid gap-3 sm:grid-cols-2">
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <Campo label="Fecha de inicio" error={errors.fechaInicio?.message}>
-              <input {...register("fechaInicio")} type="date" className="input-shell pl-9" />
+              <input {...register("fechaInicio")} type="date" className="input-shell" />
             </Campo>
             <Campo label="Fecha de fin" error={errors.fechaFin?.message}>
-              <input {...register("fechaFin")} type="date" className="input-shell pl-9" />
+              <input {...register("fechaFin")} type="date" className="input-shell" />
             </Campo>
           </div>
 
-          <BotonEnviar enviando={isSubmitting} textoEnviando="Creando..." className="button-primary w-full">
-            Crear unidad didáctica
-          </BotonEnviar>
-
           <ErrorGeneral mensaje={errors.root?.message} />
+
+          <div className="flex flex-col-reverse gap-2 border-t border-linea pt-4 sm:flex-row sm:justify-end">
+            <Link href={`/cursos/${cursoId}`} className="button-secondary">
+              Cancelar
+            </Link>
+            <BotonEnviar
+              enviando={isSubmitting}
+              textoEnviando="Creando..."
+              className="button-primary"
+            >
+              <FilePlus2 className="h-4 w-4" />
+              Crear unidad didáctica
+            </BotonEnviar>
+          </div>
         </form>
-      </section>
+      </SectionCard>
     </div>
   );
 }

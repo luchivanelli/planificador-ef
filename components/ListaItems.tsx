@@ -23,9 +23,17 @@ export default function ListaItems({
   if (items.length === 1) return <p className={className}>{items[0]}</p>;
 
   return (
-    <ul className={`list-disc space-y-0.5 pl-5 ${className ?? ""}`}>
+    <ul className={`space-y-1 ${className ?? ""}`}>
       {items.map((item, indice) => (
-        <li key={`${indice}-${item}`}>{item}</li>
+        <li key={`${indice}-${item}`} className="flex gap-2">
+          {/* Punto propio en vez de `list-disc`: se alinea con la primera línea
+              incluso cuando el ítem ocupa varias. */}
+          <span
+            aria-hidden="true"
+            className="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400"
+          />
+          <span className="min-w-0">{item}</span>
+        </li>
       ))}
     </ul>
   );

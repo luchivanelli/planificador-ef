@@ -87,16 +87,21 @@ export default function JuegoForm({
   );
 
   return (
-    <form id={formId} onSubmit={onSubmit} noValidate className="mt-3 space-y-3">
-      <Campo error={errors.nombre?.message}>
-        <input {...register("nombre")} placeholder="Nombre del juego" className="input-shell w-full" />
+    <form id={formId} onSubmit={onSubmit} noValidate className="space-y-4 pt-1">
+      <Campo label="Nombre del juego" error={errors.nombre?.message}>
+        <input {...register("nombre")} placeholder="Ej. Los diez pases" className="input-shell" />
       </Campo>
-      <Campo error={errors.descripcion?.message}>
-        <textarea {...register("descripcion")} placeholder="Descripción" rows={4} className="input-shell w-full" />
+      <Campo label="Descripción" error={errors.descripcion?.message}>
+        <textarea
+          {...register("descripcion")}
+          placeholder="Cómo se juega, cuántos participan, variantes..."
+          rows={4}
+          className="input-shell"
+        />
       </Campo>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Campo error={errors.rangoEtario?.message}>
-          <select {...register("rangoEtario")} className="input-shell w-full">
+        <Campo label="Rango etario" error={errors.rangoEtario?.message}>
+          <select {...register("rangoEtario")} className="input-shell">
             {RANGOS.map((rango) => (
               <option key={rango.value} value={rango.value}>
                 {rango.label}
@@ -104,8 +109,8 @@ export default function JuegoForm({
             ))}
           </select>
         </Campo>
-        <Campo error={errors.categoria?.message}>
-          <select {...register("categoria")} className="input-shell w-full">
+        <Campo label="Categoría" error={errors.categoria?.message}>
+          <select {...register("categoria")} className="input-shell">
             {CATEGORIAS.map((categoria) => (
               <option key={categoria.value} value={categoria.value}>
                 {categoria.label}
@@ -113,8 +118,8 @@ export default function JuegoForm({
             ))}
           </select>
         </Campo>
-        <Campo error={errors.estrategia?.message}>
-          <select {...register("estrategia")} className="input-shell w-full">
+        <Campo label="Estrategia" error={errors.estrategia?.message}>
+          <select {...register("estrategia")} className="input-shell">
             {ESTRATEGIAS.map((estrategia) => (
               <option key={estrategia.value} value={estrategia.value}>
                 {estrategia.label}
@@ -122,24 +127,24 @@ export default function JuegoForm({
             ))}
           </select>
         </Campo>
-        <Campo error={errors.materiales?.message}>
-          <input
-            {...register("materiales")}
-            placeholder="Materiales (separados por coma)"
-            className="input-shell w-full"
-          />
+        <Campo
+          label="Materiales"
+          error={errors.materiales?.message}
+          hint="Separalos con comas: conos, pelotas, aros."
+        >
+          <input {...register("materiales")} placeholder="Conos, pelotas" className="input-shell" />
         </Campo>
       </div>
 
       <ErrorGeneral mensaje={errors.root?.message} />
 
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2 border-t border-linea pt-3">
         <BotonEnviar enviando={isSubmitting} textoEnviando="Guardando..." className="button-primary">
           {esEdicion ? (
             "Guardar"
           ) : (
             <>
-              <PlusCircle className="mr-2 h-4 w-4" />
+              <PlusCircle className="h-4 w-4" />
               Guardar juego
             </>
           )}

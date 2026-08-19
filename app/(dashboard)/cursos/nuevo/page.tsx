@@ -11,6 +11,8 @@ import { enviarFormulario } from "@/lib/form/enviar-formulario";
 import { CICLOS_POR_NIVEL, NIVELES, TURNOS } from "@/lib/types";
 import { Campo, ErrorGeneral } from "@/components/form/Campo";
 import BotonEnviar from "@/components/form/BotonEnviar";
+import BackLink from "@/components/BackLink";
+import SectionCard from "@/components/ui/SectionCard";
 
 export default function NuevoCursoPage() {
   const router = useRouter();
@@ -46,25 +48,30 @@ export default function NuevoCursoPage() {
   );
 
   return (
-    <div className="mx-auto max-w-xl">
-      <section className="surface-card p-5 sm:p-6">
-        <div className="mb-4 flex items-start gap-4 sm:items-center">
-          <div className="bg-[#0f63ff]/10 p-2.5 text-[#0f63ff]">
-            <BookPlus className="h-5 w-5 sm:h-6 sm:w-6" />
+    <div className="mx-auto max-w-2xl">
+      <BackLink href="/cursos" title="Volver a mis cursos" />
+
+      <SectionCard
+        destacada
+        icono={BookPlus}
+        titulo="Nuevo curso"
+        subtitulo="Completá los datos del curso para empezar a trabajar."
+      >
+        <form onSubmit={onSubmit} noValidate className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Campo label="Institución" error={errors.institucion?.message}>
+              <input
+                {...register("institucion")}
+                placeholder="Ej. Escuela N°12"
+                className="input-shell"
+              />
+            </Campo>
+            <Campo label="Nombre del curso" error={errors.nombre?.message}>
+              <input {...register("nombre")} placeholder="Ej. 5° B" className="input-shell" />
+            </Campo>
           </div>
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">Nuevo curso</h1>
-            <p className="text-sm text-slate-500 sm:text-base">Completá los datos del curso para empezar a trabajar.</p>
-          </div>
-        </div>
-        <form onSubmit={onSubmit} noValidate className="space-y-3">
-          <Campo label="Institución" error={errors.institucion?.message}>
-            <input {...register("institucion")} placeholder="Ej. Escuela N°12" className="input-shell pl-9" />
-          </Campo>
-          <Campo label="Nombre del curso" error={errors.nombre?.message}>
-            <input {...register("nombre")} placeholder="Ej. 5° B" className="input-shell pl-9" />
-          </Campo>
-          <div className="grid gap-3 sm:grid-cols-2">
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <Campo label="Nivel" error={errors.nivel?.message}>
               <select
                 {...register("nivel", {
@@ -91,13 +98,16 @@ export default function NuevoCursoPage() {
               </select>
             </Campo>
           </div>
+
           <Campo
             label="Ciclo"
             error={errors.ciclo?.message}
             hint="Elegí el ciclo que corresponda al nivel seleccionado."
           >
             <select {...register("ciclo")} disabled={!nivelSeleccionado} className="input-shell">
-              <option value="">{nivelSeleccionado ? "Elegí un ciclo..." : "Elegí primero el nivel..."}</option>
+              <option value="">
+                {nivelSeleccionado ? "Elegí un ciclo..." : "Elegí primero el nivel..."}
+              </option>
               {ciclosDisponibles.map((ciclo) => (
                 <option key={ciclo.value} value={ciclo.value}>
                   {ciclo.label}
@@ -105,30 +115,33 @@ export default function NuevoCursoPage() {
               ))}
             </select>
           </Campo>
+
           <Campo label="Año lectivo" error={errors.anioLectivo?.message}>
             <input
               {...register("anioLectivo", { valueAsNumber: true })}
               type="number"
-              className="input-shell pl-9"
+              inputMode="numeric"
+              className="input-shell"
             />
           </Campo>
 
           <ErrorGeneral mensaje={errors.root?.message} />
 
-          <div className="flex gap-2 pt-3">
-            <Link href="/cursos" className="button-secondary w-full">
+          <div className="flex flex-col-reverse gap-2 border-t border-linea pt-4 sm:flex-row sm:justify-end">
+            <Link href="/cursos" className="button-secondary sm:w-auto">
               Cancelar
             </Link>
             <BotonEnviar
               enviando={isSubmitting}
               textoEnviando="Creando..."
-              className="button-primary w-full cursor-pointer"
+              className="button-primary"
             >
+              <BookPlus className="h-4 w-4" />
               Crear curso
             </BotonEnviar>
           </div>
         </form>
-      </section>
+      </SectionCard>
     </div>
   );
 }

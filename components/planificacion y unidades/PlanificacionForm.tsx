@@ -59,33 +59,35 @@ export default function PlanificacionForm({
   );
 
   return (
-    <form id={formId} onSubmit={onSubmit} noValidate className="mt-3 space-y-3">
-      <div className="grid gap-3">
-        <Campo label="Año" error={errors.anio?.message}>
-          {/* Sólo lectura (no editable) pero se envía y valida igual que el resto. */}
-          <input
-            {...register("anio", { valueAsNumber: true })}
-            type="number"
-            readOnly
-            aria-readonly="true"
-            className="input-shell"
-          />
-        </Campo>
-      </div>
+    <form id={formId} onSubmit={onSubmit} noValidate className="space-y-4 pt-1">
+      <Campo label="Año" error={errors.anio?.message} className="sm:max-w-40">
+        {/* Sólo lectura (no editable) pero se envía y valida igual que el resto. */}
+        <input
+          {...register("anio", { valueAsNumber: true })}
+          type="number"
+          readOnly
+          aria-readonly="true"
+          className="input-shell"
+        />
+      </Campo>
 
       <Campo label="Objetivos" error={errors.objetivos?.message} hint={AYUDA_LISTA}>
         <TextareaLista
           control={control}
           name="objetivos"
           rows={3}
-          className="input-shell min-h-[92px] w-full"
+          className="input-shell min-h-24"
         />
       </Campo>
 
       <ErrorGeneral mensaje={errors.root?.message} />
 
-      <div className="flex flex-wrap gap-2">
-        <BotonEnviar enviando={isSubmitting} textoEnviando="Guardando..." className="button-primary flex-1">
+      <div className="flex flex-wrap justify-end gap-2 border-t border-linea pt-3">
+        <BotonEnviar
+          enviando={isSubmitting}
+          textoEnviando="Guardando..."
+          className="button-primary"
+        >
           {planificacion ? "Guardar cambios" : "Crear planificación"}
         </BotonEnviar>
 

@@ -18,14 +18,15 @@ import {
   type ResultadoAccion,
 } from "@/lib/form/action-result";
 
-export async function crearCurso(input: unknown): Promise<ResultadoAccion> {
-  const docente = await requerirDocente();
-
-  const validado = validarPayload(cursoSchema, input);
-  if (!validado.ok) return validado;
-
-  const { institucion: institucionNombre, nombre, nivel, ciclo, turno, anioLectivo } = validado.data;
-
+/**
+ * Busca la institución por nombre y la crea si no existe, dejándola vinculada a
+ * la docente. La comparten crear y actualizar curso: en los dos casos el
+ * formulario manda un nombre escrito a mano, no un id.
+ */
+async function vincularInstitucion(
+  docente: { id: string; provincia: string | null },
+  institucionNombre: string
+) {
   let institucion = await db.institucion.findFirst({
     where: { nombre: institucionNombre },
   });
@@ -47,6 +48,19 @@ export async function crearCurso(input: unknown): Promise<ResultadoAccion> {
     create: { docenteId: docente.id, institucionId: institucion.id },
   });
 
+  return institucion;
+}
+
+export async function crearCurso(input: unknown): Promise<ResultadoAccion> {
+  const docente = await requerirDocente();
+
+  const validado = validarPayload(cursoSchema, input);
+  if (!validado.ok) return validado;
+
+  const { institucion: institucionNombre, nombre, nivel, ciclo, turno, anioLectivo } = validado.data;
+
+  const institucion = await vincularInstitucion(docente, institucionNombre);
+
   const curso = await db.curso.create({
     data: {
       institucionId: institucion.id,
@@ -62,6 +76,41 @@ export async function crearCurso(input: unknown): Promise<ResultadoAccion> {
   revalidatePath("/");
   revalidatePath("/cursos");
   return exito(undefined, `/cursos/${curso.id}`);
+}
+
+export async function actualizarCurso(cursoId: string, input: unknown): Promise<ResultadoAccion> {
+  const docente = await requerirDocente();
+
+  try {
+    await verificarPropietarioCurso(cursoId, docente.id);
+  } catch (error) {
+    return fallo(mensajeDeError(error, "No tenés permiso sobre este curso"));
+  }
+
+  const validado = validarPayload(cursoSchema, input);
+  if (!validado.ok) return validado;
+
+  // El año lectivo se fija al crear el curso y no se edita: aunque venga en el
+  // payload (`cursoSchema` lo exige), acá se descarta a propósito.
+  const { institucion: institucionNombre, nombre, nivel, ciclo, turno } = validado.data;
+
+  const institucion = await vincularInstitucion(docente, institucionNombre);
+
+  await db.curso.update({
+    where: { id: cursoId },
+    data: {
+      institucionId: institucion.id,
+      nombre,
+      nivel,
+      ciclo,
+      turno,
+    },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/cursos");
+  revalidatePath(`/cursos/${cursoId}`);
+  return exito();
 }
 
 export async function agregarAlumno(cursoId: string, input: unknown): Promise<ResultadoAccion> {

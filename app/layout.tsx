@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -21,6 +21,13 @@ const ibmPlex = IBM_Plex_Sans({
 export const metadata: Metadata = {
   title: "Planificador EF",
   description: "Planificador para docentes de Educación Física",
+  applicationName: "Planificador EF",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#4f46e5",
+  // La app se usa mucho en el celular: que la barra del navegador acompañe.
+  colorScheme: "light",
 };
 
 export default function RootLayout({
@@ -33,9 +40,10 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} ${ibmPlex.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col">
         {children}
-        <Toaster position="bottom-right" richColors closeButton />
+        {/* Arriba y al centro: abajo la taparía la barra de navegación del celular. */}
+        <Toaster position="top-center" richColors closeButton />
       </body>
     </html>
   );

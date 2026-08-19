@@ -1,5 +1,14 @@
 import Link from "next/link";
-import { ClipboardList, MapPin, Plus, User, Bell, School } from "lucide-react";
+import {
+  CalendarDays,
+  ClipboardList,
+  Clock,
+  GraduationCap,
+  Plus,
+  School,
+  Sun,
+  Users,
+} from "lucide-react";
 import { db } from "@/lib/db";
 import { requerirDocente } from "@/lib/auth";
 import { marcarClasesDictadas, clasesPendientesDeAsistencia } from "@/lib/clases/consultas";
@@ -8,17 +17,17 @@ import { cambiarEstadoClase } from "@/lib/actions/clases.actions";
 import { ZONA_HORARIA, aFechaLegible, rangoDelDia, resumenLista } from "@/lib/schemas/common";
 import FormSubmit from "@/components/FormSubmit";
 import ListaItems from "@/components/ListaItems";
-import type { Nivel, Turno } from "@prisma/client";
+import ClaseBadge from "@/components/clase/ClaseBadge";
+import CursoCard from "@/components/curso/CursoCard";
+import EmptyState from "@/components/ui/EmptyState";
+import SectionCard from "@/components/ui/SectionCard";
+import StatTile from "@/components/ui/StatTile";
+import { NIVELES } from "@/lib/types";
 
-const NIVELES: { value: Nivel; label: string }[] = [
-  { value: "primaria", label: "Primaria" },
-  { value: "secundaria", label: "Secundaria" },
-];
-
-const TURNOS: { value: Turno; label: string }[] = [
-  { value: "manana", label: "Mañana" },
-  { value: "tarde", label: "Tarde" },
-];
+/** "lunes 5 de agosto" → "Lunes 5 de agosto". */
+function conMayusculaInicial(texto: string) {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
 
 export default async function DashboardPage() {
   // `requerirDocente` redirige al login: sin esto, un pedido sin sesión revienta
@@ -52,99 +61,141 @@ export default async function DashboardPage() {
 
   const pendientes = await clasesPendientesDeAsistencia(docente.id);
 
+  // Un mismo alumno puede estar en varios cursos: se cuenta una sola vez.
+  const totalAlumnos = new Set(cursos.flatMap((c) => c.alumnos.map((ca) => ca.alumnoId))).size;
+
+  const fechaDeHoy = conMayusculaInicial(
+    ahora.toLocaleDateString("es-AR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      // El servidor corre en UTC: sin esto, de noche muestra el día siguiente.
+      timeZone: ZONA_HORARIA,
+    })
+  );
+
   return (
-    <div className="space-y-4">
-      <section>
-        <h1 className="page-title">Hola, Prof. {docente?.nombre} {docente?.apellido}</h1>
-        <p className="page-subtitle">Hoy es {ahora.toLocaleDateString("es-AR", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-            // El servidor corre en UTC: sin esto, de noche muestra el día siguiente.
-            timeZone: ZONA_HORARIA,
-          })}
-        </p>
-      </section>
-
-      <section className="primary-card p-5 sm:p-6">
-        <div className="mb-4 flex items-start gap-4 sm:items-center">
-          <div className="bg-[#0f63ff]/10 p-2.5 text-[#0f63ff]">
-            <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">Clases de hoy</h1>
-            <p className="text-sm sm:text-base text-slate-500">
-              {clasesHoy.length === 0 ? "No tenés clases programadas para hoy" : `${clasesHoy.length} clase(s) programada(s)`}
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
-          {clasesHoy.map((clase) => {
-            const presentacion = presentacionClase(
-              { ...clase, tieneAsistencia: clase._count.asistencias > 0 },
-              ahora
-            );
-            const cursoDeLaClase = clase.unidadDidactica.planificacion.curso;
-
-            return (
-              <Link
-                key={clase.id}
-                href={`/cursos/${cursoDeLaClase.id}/clase/${clase.id}`}
-                className="flex flex-1 flex-col gap-2 border border-slate-200 bg-slate-50/80 px-4 py-3 transition hover:border-[#0f63ff]/40"
-              >
-                <div className="flex justify-between items-center w-full">
-                  <p className={`rounded-full border px-2.5 py-0.5 font-medium text-[11px] sm:text-xs ${presentacion.badge}`}>
-                    {presentacion.etiqueta}
-                  </p>
-                  <p className="text-xs sm:text-sm p-1.5 text-[#0f63ff]">{clase.horaInicio} - {clase.horaFin}</p>
-                </div>
-              <h2 className="text-lg font-bold text-slate-900">{cursoDeLaClase.nombre} {cursoDeLaClase.nivel == "primaria" ? "Primaria" : "Secundaria"}</h2>
-                <div className="p-4 border-1 border-dashed border-slate-200">
-                  <h3 className="text-xs font-semibold text-slate-500">TEMA DEL DIA</h3>
-                  <ListaItems
-                    valor={clase.temaClase}
-                    vacio="Sin tema definido"
-                    className="text-sm sm:text-base text-slate-900 font-semibold mt-1"
-                  />
-                  <p className="text-xs text-slate-500">Unidad: {clase.unidadDidactica.titulo}</p>
-                </div>
-                {presentacion.requiereAtencion && (
-                  <p className="flex items-center gap-2 border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 sm:text-sm">
-                    <ClipboardList className="h-4 w-4 shrink-0" />
-                    Ya terminó y no cargaste la asistencia. Tocá para cerrarla.
-                  </p>
-                )}
-              </Link>
-            );
-          })}
-          {clasesHoy.length === 0 && (
-            <div className="w-full border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm sm:text-base text-slate-500">
-              Aún no hay clases cargadas para este día.
-            </div>
-          )}
+    <div className="space-y-4 sm:space-y-5">
+      <section className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="page-title">
+            Hola, Prof. {docente.nombre} {docente.apellido}
+          </h1>
+          <p className="page-subtitle mt-1 flex items-center gap-1.5">
+            <Sun className="h-4 w-4 text-amber-500" />
+            {fechaDeHoy}
+          </p>
         </div>
       </section>
+
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile icono={CalendarDays} valor={clasesHoy.length} etiqueta="Clases hoy" tono="brand" />
+        <StatTile
+          icono={ClipboardList}
+          valor={pendientes.length}
+          etiqueta="Sin cerrar"
+          tono={pendientes.length > 0 ? "ambar" : "esmeralda"}
+        />
+        <StatTile
+          icono={School}
+          valor={cursos.length}
+          etiqueta={cursos.length === 1 ? "Curso" : "Cursos"}
+          tono="cielo"
+          // href="/cursos"
+        />
+        <StatTile icono={Users} valor={totalAlumnos} etiqueta="Alumnos" tono="esmeralda" />
+      </section>
+
+      <SectionCard
+        destacada
+        icono={CalendarDays}
+        titulo="Clases de hoy"
+        subtitulo={
+          clasesHoy.length === 0
+            ? "No tenés clases programadas para hoy."
+            : `${clasesHoy.length} ${clasesHoy.length === 1 ? "clase programada" : "clases programadas"}.`
+        }
+      >
+        {clasesHoy.length === 0 ? (
+          <EmptyState
+            icono={CalendarDays}
+            titulo="Día libre por acá"
+            descripcion="Cuando cargues clases para hoy en alguna unidad didáctica, te van a aparecer en este lugar."
+          />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {clasesHoy.map((clase) => {
+              const presentacion = presentacionClase(
+                { ...clase, tieneAsistencia: clase._count.asistencias > 0 },
+                ahora
+              );
+              const cursoDeLaClase = clase.unidadDidactica.planificacion.curso;
+              const nivel = NIVELES.find((n) => n.value === cursoDeLaClase.nivel)?.label;
+
+              return (
+                <Link
+                  key={clase.id}
+                  href={`/cursos/${cursoDeLaClase.id}/clase/${clase.id}`}
+                  className="card card-hover flex flex-col gap-3 border-l-[3px] border-l-brand-500 p-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <ClaseBadge presentacion={presentacion} />
+                    {clase.horaInicio && clase.horaFin && (
+                      <span className="flex items-center gap-1.5 text-sm font-bold tabular-nums text-brand-700">
+                        <Clock className="h-4 w-4 text-brand-400" />
+                        {clase.horaInicio} – {clase.horaFin}
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-lg font-bold leading-tight text-ink-900">
+                    {cursoDeLaClase.nombre}
+                    <span className="ml-1.5 text-sm font-medium text-ink-500">{nivel}</span>
+                  </h3>
+
+                  <div className="rounded-control border border-dashed border-ink-200 bg-ink-50/70 p-3">
+                    <p className="section-title">Tema del día</p>
+                    <ListaItems
+                      valor={clase.temaClase}
+                      vacio="Sin tema definido"
+                      className="mt-1 text-sm font-semibold text-ink-900 sm:text-base"
+                    />
+                    <p className="mt-1.5 truncate text-xs text-ink-500">
+                      Unidad: {clase.unidadDidactica.titulo}
+                    </p>
+                  </div>
+
+                  {presentacion.requiereAtencion && (
+                    <p className="flex items-start gap-2 rounded-control border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                      <ClipboardList className="mt-0.5 h-4 w-4 shrink-0" />
+                      Ya terminó y no cargaste la asistencia. Tocá para cerrarla.
+                    </p>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </SectionCard>
 
       {pendientes.length > 0 && (
-        <section className="primary-card border-amber-300 p-5 sm:p-6">
-          <div className="mb-4 flex items-start gap-4">
-            <div className="bg-amber-100 p-2.5 text-amber-700">
-              <ClipboardList className="h-5 w-5 sm:w-6 sm:h-6" />
-            </div>
+        <section className="card overflow-hidden border-amber-200 p-4 sm:p-6">
+          <header className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 sm:h-11 sm:w-11">
+              <ClipboardList className="h-5 w-5" />
+            </span>
             <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-slate-900 leading-5 mb-1">
-                Clases pendientes de asistencia
-              </h2>
-              <p className="text-sm sm:text-base text-slate-500">
+              <h2 className="card-title">Clases pendientes de asistencia</h2>
+              <p className="card-subtitle mt-0.5">
                 {pendientes.length === 1
                   ? "Quedó 1 clase de días anteriores sin cerrar."
                   : `Quedaron ${pendientes.length} clases de días anteriores sin cerrar.`}{" "}
                 Cargá la asistencia para darla por dictada, o marcala como suspendida.
               </p>
             </div>
-          </div>
-          <div className="space-y-2">
+          </header>
+
+          <div className="mt-4 space-y-2">
             {pendientes.map((clase) => {
               const cursoDeLaClase = clase.unidadDidactica.planificacion.curso;
               const suspender = cambiarEstadoClase.bind(
@@ -158,13 +209,16 @@ export default async function DashboardPage() {
               return (
                 <div
                   key={clase.id}
-                  className="flex flex-wrap items-center justify-between gap-3 border border-amber-200 bg-amber-50/60 px-4 py-3"
+                  className="flex flex-col gap-3 rounded-control border border-amber-200 bg-amber-50/60 p-3 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="min-w-[220px]">
-                    <p className="text-sm font-semibold text-slate-900 sm:text-base">
-                      {cursoDeLaClase.nombre} · {aFechaLegible(clase.fecha)}
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-ink-900 sm:text-base">
+                      {cursoDeLaClase.nombre}
+                      <span className="ml-1.5 font-medium text-ink-500">
+                        {aFechaLegible(clase.fecha)}
+                      </span>
                     </p>
-                    <p className="text-xs text-slate-500 sm:text-sm">
+                    <p className="mt-0.5 text-xs text-ink-500 sm:text-sm">
                       {resumenLista(clase.objetivoClase) || "Sin objetivo definido"} · Unidad:{" "}
                       {clase.unidadDidactica.titulo}
                     </p>
@@ -172,14 +226,12 @@ export default async function DashboardPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
                       href={`/cursos/${cursoDeLaClase.id}/clase/${clase.id}`}
-                      className="button-primary text-xs sm:text-sm"
+                      className="button-primary flex-1 sm:flex-none"
                     >
                       Cargar asistencia
                     </Link>
-                    <form action={suspender}>
-                      <FormSubmit className="button-secondary text-xs sm:text-sm">
-                        Marcar como suspendida
-                      </FormSubmit>
+                    <form action={suspender} className="flex-1 sm:flex-none">
+                      <FormSubmit className="button-secondary w-full">Suspendida</FormSubmit>
                     </form>
                   </div>
                 </div>
@@ -189,49 +241,46 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      <section className="primary-card p-5 sm:p-6">
-        <div className="mb-4 flex items-start sm:items-center gap-4">
-          <div className="bg-[#0f63ff]/10 p-2.5 text-[#0f63ff]">
-            <School className="h-5 w-5 sm:h-6 sm:w-6" />
-          </div>
-          <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Mis cursos</h2>
-            <p className="text-sm sm:text-base text-slate-500">Accedé rápido a cada curso y a su planificación.</p>
-          </div>
-        </div>
-        
-        <div className="grid gap-3 md:grid-cols-2">
-          {cursos.map((curso) => (
-          <Link key={curso.id} href={`/cursos/${curso.id}`} className="border border-slate-200 bg-slate-50/80 hover:border-[#0f63ff]/40 p-4 sm:flex sm:items-start sm:justify-between sm:gap-4 cursor-pointer">
-            <div className="space-y-2 w-full">
-              <div className="flex flex-wrap justify-between items-center gap-1">
-                <p className="text-sm pr-2 font-semibold text-slate-900 sm:text-lg">{curso.nombre}</p>
-                <span className="border-1 border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff] text-[11px] sm:text-xs font-medium px-2 py-0.5 sm:py-1 rounded-full">
-                  {NIVELES.find((n) => n.value === curso.nivel)?.label} · {TURNOS.find((t) => t.value === curso.turno)?.label}
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <MapPin className="h-3 sm:h-4 w-3 sm:w-4 text-[#0f63ff]"/>
-                <p className="text-xs text-slate-500 sm:text-sm">{curso.institucion.nombre}</p>
-              </div>
-              <div className="flex items-center gap-1">
-                <User className="h-3 sm:h-4 w-3 sm:w-4 text-[#0f63ff]"/>
-                <p className="text-xs text-slate-500 sm:text-sm">{curso.alumnos.length} alumnos</p>
-              </div>
-            </div>
+      <SectionCard
+        icono={GraduationCap}
+        titulo="Mis cursos"
+        subtitulo="Accedé rápido a cada curso y a su planificación."
+        accion={
+          <Link href="/cursos" className="button-secondary">
+            Ver todos
           </Link>
-        ))}
-          {cursos.length === 0 && (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm sm:text-base text-slate-500 sm:col-span-2">
-              Todavía no creaste ningún curso.
-            </div>
-          )}
-        </div>
-        <Link href="/cursos/nuevo" className="button-secondary mt-2 w-full sm:text-sm">
-          <Plus className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
-          Nuevo curso
-        </Link>
-      </section>
+        }
+      >
+        {cursos.length === 0 ? (
+          <EmptyState
+            icono={School}
+            titulo="Todavía no creaste ningún curso"
+            descripcion="Creá tu primer curso para empezar a armar la planificación anual, las unidades y las clases."
+            accion={
+              <Link href="/cursos/nuevo" className="button-primary">
+                <Plus className="h-4 w-4" />
+                Crear mi primer curso
+              </Link>
+            }
+          />
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {cursos.map((curso) => (
+              <CursoCard
+                key={curso.id}
+                curso={{
+                  id: curso.id,
+                  nombre: curso.nombre,
+                  nivel: curso.nivel,
+                  turno: curso.turno,
+                  institucion: curso.institucion.nombre,
+                  cantidadAlumnos: curso.alumnos.length,
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 }

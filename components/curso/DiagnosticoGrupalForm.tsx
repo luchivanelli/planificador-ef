@@ -49,13 +49,13 @@ export default function DiagnosticoGrupalForm({
           control={control}
           name="diagnosticoGrupal"
           rows={3}
-          className="input-shell min-h-[100px] w-full"
+          className="input-shell min-h-28"
         />
       </Campo>
 
       <ErrorGeneral mensaje={errors.root?.message} />
 
-      <div className="flex justify-end">
+      <div className="flex justify-end border-t border-linea pt-3">
         <BotonEnviar enviando={isSubmitting} textoEnviando="Guardando..." className="button-primary">
           Guardar
         </BotonEnviar>

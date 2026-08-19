@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { Gamepad2 } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { db } from "@/lib/db";
 import JuegoForm from "@/components/juego/JuegoForm";
 import JuegosLista from "@/components/juego/JuegosLista";
 import { GenericToast } from "@/components/GenericToast";
+import Disclosure from "@/components/ui/Disclosure";
+import PageHeader from "@/components/ui/PageHeader";
 import type { RangoEtario, CategoriaJuego, EstrategiaJuego } from "@prisma/client";
 import { RANGOS, CATEGORIAS, ESTRATEGIAS } from "@/lib/types";
-
 
 export default async function JuegosPage({
   searchParams,
@@ -61,86 +62,76 @@ export default async function JuegosPage({
     etiqueta: `${RANGOS.find((r) => r.value === juego.rangoEtario)?.label} · ${CATEGORIAS.find((c) => c.value === juego.categoria)?.label}`,
   }));
 
-  return (
-    <div className="space-y-4">
-      <GenericToast visible={created === "true"} message="Juego agregado correctamente" />
-      <section className="surface-card p-5 sm:p-6">
-        <div className="flex items-start gap-4 sm:items-center">
-          <div className="bg-[#0f63ff]/10 p-2.5 text-[#0f63ff]">
-            <Gamepad2 className="h-5 w-5 sm:h-6 sm:w-6" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">Banco de juegos</h1>
-            <p className="text-sm text-slate-500 sm:text-base">
-              Filtrá por edad y categoría para encontrar ideas rápidas.
-            </p>
-          </div>
+  const hayFiltros = Boolean(edad || categoria || estrategia);
+
+  /** Una fila de píldoras: la primera limpia ese filtro, el resto lo fijan. */
+  function grupoDeFiltros(
+    etiqueta: string,
+    todos: string,
+    opciones: { value: string; label: string }[],
+    activo: string | undefined,
+    href: (valor: string | null) => string
+  ) {
+    return (
+      <div>
+        <p className="mb-1.5 text-xs font-semibold text-ink-500">{etiqueta}</p>
+        <div className="flex flex-wrap gap-2">
+          <Link href={href(null)} className={`chip ${!activo ? "chip-activo" : ""}`}>
+            {todos}
+          </Link>
+          {opciones.map((opcion) => (
+            <Link
+              key={opcion.value}
+              href={href(opcion.value)}
+              className={`chip ${activo === opcion.value ? "chip-activo" : ""}`}
+            >
+              {opcion.label}
+            </Link>
+          ))}
         </div>
-      </section>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 sm:space-y-5">
+      <GenericToast visible={created === "true"} message="Juego agregado correctamente" />
+
+      <PageHeader
+        titulo="Banco de juegos"
+        subtitulo="Buscá por nombre, filtrá por edad y categoría, y tené las ideas listas para armar la clase."
+        etiquetas={
+          <>
+            <span className="pill pill-brand">
+              {juegos.length} {juegos.length === 1 ? "juego" : "juegos"}
+            </span>
+            {hayFiltros && (
+              <Link href="/juegos" className="link-brand text-xs">
+                Quitar filtros
+              </Link>
+            )}
+          </>
+        }
+      />
 
       <JuegosLista
         juegos={listado}
         filtros={
-          <div className="py-2">
-            <div className="flex flex-wrap gap-1.5 pb-2">
-              <Link
-                href={hrefFiltro({ edad: null })}
-                className={`rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${!edad ? "border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff]" : "border-slate-200 text-slate-600"}`}
-              >
-                Todas las edades
-              </Link>
-              {RANGOS.map((r) => (
-                <Link
-                  key={r.value}
-                  href={hrefFiltro({ edad: r.value })}
-                  className={`rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${edad === r.value ? "border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff]" : "border-slate-200 text-slate-600"}`}
-                >
-                  {r.label}
-                </Link>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-1.5 pb-2">
-              <Link
-                href={hrefFiltro({ categoria: null })}
-                className={`rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${!categoria ? "border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff]" : "border-slate-200 text-slate-600"}`}
-              >
-                Todas las categorías
-              </Link>
-              {CATEGORIAS.map((c) => (
-                <Link
-                  key={c.value}
-                  href={hrefFiltro({ categoria: c.value })}
-                  className={`rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${categoria === c.value ? "border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff]" : "border-slate-200 text-slate-600"}`}
-                >
-                  {c.label}
-                </Link>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              <Link
-                href={hrefFiltro({ estrategia: null })}
-                className={`rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${!estrategia ? "border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff]" : "border-slate-200 text-slate-600"}`}
-              >
-                Todas las estrategias
-              </Link>
-              {ESTRATEGIAS.map((e) => (
-                <Link
-                  key={e.value}
-                  href={hrefFiltro({ estrategia: e.value })}
-                  className={`rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${estrategia === e.value ? "border-[#0f63ff]/20 bg-[#0f63ff]/10 text-[#0f63ff]" : "border-slate-200 text-slate-600"}`}
-                >
-                  {e.label}
-                </Link>
-              ))}
-            </div>
+          <div className="space-y-3 pt-1">
+            {grupoDeFiltros("Edad", "Todas", RANGOS, edad, (edad) => hrefFiltro({ edad }))}
+            {grupoDeFiltros("Categoría", "Todas", CATEGORIAS, categoria, (categoria) =>
+              hrefFiltro({ categoria })
+            )}
+            {grupoDeFiltros("Estrategia", "Todas", ESTRATEGIAS, estrategia, (estrategia) =>
+              hrefFiltro({ estrategia })
+            )}
           </div>
         }
       />
 
-      <details className="surface-card p-5">
-        <summary className="cursor-pointer text-sm font-semibold text-slate-900 sm:text-base">Agregar juego</summary>
+      <Disclosure titulo="Agregar un juego al banco" icono={PlusCircle} tono="accion">
         <JuegoForm />
-      </details>
+      </Disclosure>
     </div>
   );
 }

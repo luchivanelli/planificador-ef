@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Campo, ErrorGeneral } from "@/components/form/Campo";
 import BotonEnviar from "@/components/form/BotonEnviar";
@@ -101,7 +102,7 @@ export default function ActividadForm({
   );
 
   const selectTipoBloque = (
-    <select {...register("tipoBloque")} className="input-shell w-full">
+    <select {...register("tipoBloque")} className="input-shell">
       {TIPOS_BLOQUE.map((tipo) => (
         <option key={tipo.value} value={tipo.value}>
           {tipo.label}
@@ -110,70 +111,87 @@ export default function ActividadForm({
     </select>
   );
 
+  /** El "min" va adentro del campo: antes era otra caja al lado y confundía. */
+  const campoDuracion = (
+    <div className="relative">
+      <input
+        {...register("duracionMinutos", { valueAsNumber: true })}
+        type="number"
+        min={1}
+        inputMode="numeric"
+        className="input-shell pr-12"
+      />
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-ink-400">
+        min
+      </span>
+    </div>
+  );
+
   // Se compara contra `actividad` (y no `esEdicion`) para que TypeScript
   // sepa que el id existe al armar el botón de eliminar.
   if (actividad) {
     return (
-      <form onSubmit={onSubmit} noValidate className="mt-3 grid gap-2 md:grid-cols-3">
+      <form onSubmit={onSubmit} noValidate className="mt-4 space-y-3 border-t border-linea pt-4">
         {/* El buscador ocupa toda la fila: el panel de filtros necesita el ancho. */}
-        <Campo error={errors.juegoId?.message} className="md:col-span-3">
+        <Campo label="Juego" error={errors.juegoId?.message}>
           {buscadorJuego}
         </Campo>
-        <Campo error={errors.tipoBloque?.message}>{selectTipoBloque}</Campo>
-        <Campo error={errors.duracionMinutos?.message} className="flex items-center">
-          <input
-            {...register("duracionMinutos", { valueAsNumber: true })}
-            type="number"
-            className="input-shell w-full"
-          />
-          <span className="input-shell flex-1">min</span>
-        </Campo>
-        <BotonEnviar enviando={isSubmitting} textoEnviando="Guardando..." className="button-primary md:col-start-2">
-          Guardar
-        </BotonEnviar>
-        {/* type="button": vive dentro del form pero no lo envía. */}
-        <ConfirmActionButton
-          buttonLabel="Eliminar"
-          className="button-delete"
-          confirmTitle="¿Eliminar esta actividad?"
-          confirmMessage="Se quitará de la secuencia de la clase."
-          confirmActionType="delete-actividad"
-          hiddenFields={{ actividadId: actividad.id, claseDiariaId: claseId, cursoId }}
-          successMessage="Actividad eliminada"
-          errorMessage="No se pudo eliminar la actividad"
-        />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Campo label="Momento de la clase" error={errors.tipoBloque?.message}>
+            {selectTipoBloque}
+          </Campo>
+          <Campo label="Duración" error={errors.duracionMinutos?.message}>
+            {campoDuracion}
+          </Campo>
+        </div>
+
         <ErrorGeneral mensaje={errors.root?.message} />
+
+        <div className="flex flex-wrap justify-end gap-2">
+          <BotonEnviar enviando={isSubmitting} textoEnviando="Guardando..." className="button-primary">
+            Guardar cambios
+          </BotonEnviar>
+          {/* type="button": vive dentro del form pero no lo envía. */}
+          <ConfirmActionButton
+            buttonLabel="Eliminar"
+            className="button-delete"
+            confirmTitle="¿Eliminar esta actividad?"
+            confirmMessage="Se quitará de la secuencia de la clase."
+            confirmActionType="delete-actividad"
+            hiddenFields={{ actividadId: actividad.id, claseDiariaId: claseId, cursoId }}
+            successMessage="Actividad eliminada"
+            errorMessage="No se pudo eliminar la actividad"
+          />
+        </div>
       </form>
     );
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      noValidate
-      className="mt-4 space-y-2 border border-slate-200 bg-slate-50 p-3"
-    >
-      <p className="text-sm font-semibold text-slate-900 sm:text-base">Agregar actividad</p>
+    <form onSubmit={onSubmit} noValidate className="space-y-3 pt-1">
       {/* El buscador ocupa toda la fila: el panel de filtros necesita el ancho. */}
-      <Campo error={errors.juegoId?.message}>{buscadorJuego}</Campo>
-      <div className="flex flex-wrap justify-end gap-2">
-        <Campo error={errors.tipoBloque?.message} className="w-full sm:w-auto">
+      <Campo label="Juego" error={errors.juegoId?.message}>
+        {buscadorJuego}
+      </Campo>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Campo label="Momento de la clase" error={errors.tipoBloque?.message}>
           {selectTipoBloque}
         </Campo>
-        <Campo error={errors.duracionMinutos?.message} className="w-30 flex items-center">
-          <input
-            {...register("duracionMinutos", { valueAsNumber: true })}
-            type="number"
-            className="input-shell w-full"
-          />
-          <span className="input-shell flex-1">min</span>
+        <Campo label="Duración" error={errors.duracionMinutos?.message}>
+          {campoDuracion}
         </Campo>
-        <BotonEnviar enviando={isSubmitting} textoEnviando="Agregando..." className="button-primary flex-1 md:flex-0">
-          Agregar
-        </BotonEnviar>
       </div>
 
       <ErrorGeneral mensaje={errors.root?.message} />
+
+      <BotonEnviar
+        enviando={isSubmitting}
+        textoEnviando="Agregando..."
+        className="button-primary w-full sm:w-auto"
+      >
+        <PlusCircle className="h-4 w-4" />
+        Agregar actividad
+      </BotonEnviar>
     </form>
   );
 }

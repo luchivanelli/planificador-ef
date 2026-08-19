@@ -65,28 +65,28 @@ export type PresentacionClase = {
 
 const PALETA = {
   emerald: {
-    badge: "border-emerald-500 bg-emerald-50 text-emerald-700",
+    badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
     colorTexto: "text-emerald-600",
   },
   azul: {
-    badge: "border-[#0f63ff] bg-[#0f63ff]/10 text-[#0f63ff]",
-    colorTexto: "text-[#0f63ff]",
+    badge: "border-brand-200 bg-brand-50 text-brand-700",
+    colorTexto: "text-brand-600",
   },
   ambar: {
-    badge: "border-amber-500 bg-amber-50 text-amber-700",
+    badge: "border-amber-200 bg-amber-50 text-amber-700",
     colorTexto: "text-amber-600",
   },
   rosa: {
-    badge: "border-rose-500 bg-rose-50 text-rose-700",
+    badge: "border-rose-200 bg-rose-50 text-rose-700",
     colorTexto: "text-rose-500",
   },
   violeta: {
-    badge: "border-violet-500 bg-violet-50 text-violet-700",
+    badge: "border-violet-200 bg-violet-50 text-violet-700",
     colorTexto: "text-violet-600",
   },
   gris: {
-    badge: "border-slate-300 bg-slate-100 text-slate-600",
-    colorTexto: "text-slate-400",
+    badge: "border-ink-200 bg-ink-100 text-ink-600",
+    colorTexto: "text-ink-400",
   },
 } as const;
 

@@ -1,6 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BookOpen, ChartNoAxesCombined, TimerReset } from "lucide-react";
+import {
+  BookOpen,
+  CalendarClock,
+  ChartNoAxesCombined,
+  ClipboardCheck,
+  Clock,
+  ListChecks,
+  Pencil,
+  PlusCircle,
+  Target,
+  TimerReset,
+} from "lucide-react";
 import { db } from "@/lib/db";
 import { requerirDocente } from "@/lib/auth";
 import { ejesDelCurso, marcarClasesDictadas } from "@/lib/clases/consultas";
@@ -9,10 +20,14 @@ import ListaAsistencia from "@/components/ListaAsistencia";
 import ClaseForm from "@/components/clase/ClaseForm";
 import ActividadForm from "@/components/clase/ActividadForm";
 import ActividadesLista from "@/components/clase/ActividadesLista";
+import ClaseBadge from "@/components/clase/ClaseBadge";
 import type { EstadoAsistencia } from "@prisma/client";
-import BackLink from "@/components/BackLink";
 import ListaItems from "@/components/ListaItems";
-import { aValorFecha } from "@/lib/schemas/common";
+import Disclosure from "@/components/ui/Disclosure";
+import EmptyState from "@/components/ui/EmptyState";
+import PageHeader from "@/components/ui/PageHeader";
+import SectionCard from "@/components/ui/SectionCard";
+import { aFechaLegible, aValorFecha } from "@/lib/schemas/common";
 
 export default async function ClaseEnCursoPage({
   params,
@@ -67,54 +82,61 @@ export default async function ClaseEnCursoPage({
     tieneAsistencia: asistenciaClase.length > 0,
   });
 
-  return (
-    <div className="space-y-4">
-      <section className="surface-card p-5 sm:p-6">
-        <BackLink href={`/cursos/${cursoId}/unidades/${unidadDidacticaId}`} title="Volver a la unidad" />
-        <div className="flex items-center gap-4">
-          <h1 className="page-title">Clase {curso.nombre}</h1>
-          <p className={`rounded-full border px-2.5 py-0.5 sm:py-1 font-medium text-[11px] sm:text-xs ${presentacion.badge}`}>
-            {presentacion.etiqueta.toLocaleUpperCase()}
-          </p>
-        </div>
-        {clase.horaInicio && clase.horaFin && (
-          <p className="mt-2 text-sm text-slate-500">Horario: {clase.horaInicio} a {clase.horaFin}</p>
-        )}
+  const minutosTotales = clase.actividades.reduce((total, act) => total + act.duracionMinutos, 0);
 
-        {(clase.contenidosClase || clase.temaClase) && (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {clase.temaClase && (
-              <div>
-                <h2 className="text-xs font-semibold text-slate-500">TEMAS</h2>
-                <ListaItems
-                  valor={clase.temaClase}
-                  className="mt-1 text-sm text-slate-900 sm:text-base"
-                />
-              </div>
+  /** Los tres campos de texto de la clase se muestran con la misma forma. */
+  const bloquesDeContenido = [
+    { titulo: "Temas", valor: clase.temaClase, icono: ListChecks },
+    { titulo: "Objetivos", valor: clase.objetivoClase, icono: Target },
+    { titulo: "Contenidos", valor: clase.contenidosClase, icono: BookOpen },
+  ].filter((bloque) => Boolean(bloque.valor));
+
+  return (
+    <div className="space-y-4 sm:space-y-5">
+      <PageHeader
+        volverA={`/cursos/${cursoId}/unidades/${unidadDidacticaId}`}
+        volverTitulo="Volver a la unidad"
+        titulo={`Clase de ${curso.nombre}`}
+        etiquetas={
+          <>
+            <ClaseBadge presentacion={presentacion} />
+            <span className="pill">
+              <CalendarClock className="h-3.5 w-3.5" />
+              {aFechaLegible(clase.fecha)}
+            </span>
+            {clase.horaInicio && clase.horaFin && (
+              <span className="pill pill-brand">
+                <Clock className="h-3.5 w-3.5" />
+                {clase.horaInicio} – {clase.horaFin}
+              </span>
             )}
-            {clase.objetivoClase && (
-              <div>
-                <h2 className="text-xs font-semibold text-slate-500">OBJETIVOS</h2>
-                <ListaItems
-                  valor={clase.objetivoClase}
-                  className="mt-1 text-sm text-slate-900 sm:text-base"
-                />
+          </>
+        }
+        acciones={
+          <Link href={`/cursos/${cursoId}/clase/${claseId}/evaluacion`} className="button-primary">
+            <ChartNoAxesCombined className="h-4 w-4" />
+            Evaluar
+          </Link>
+        }
+      >
+        {bloquesDeContenido.length > 0 && (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {bloquesDeContenido.map(({ titulo, valor, icono: Icono }) => (
+              <div
+                key={titulo}
+                className="rounded-control border border-dashed border-ink-200 bg-ink-50/70 p-3.5"
+              >
+                <p className="section-title flex items-center gap-1.5">
+                  <Icono className="h-3.5 w-3.5 text-brand-500" />
+                  {titulo}
+                </p>
+                <ListaItems valor={valor} className="mt-1.5 text-sm text-ink-800" />
               </div>
-            )}
-            {clase.contenidosClase && (
-              <div>
-                <h2 className="text-xs font-semibold text-slate-500">CONTENIDOS</h2>
-                <ListaItems
-                  valor={clase.contenidosClase}
-                  className="mt-1 text-sm text-slate-900 sm:text-base"
-                />
-              </div>
-            )}
+            ))}
           </div>
         )}
 
-        <details className="surface-card py-2 px-4 mt-4">
-          <summary className="cursor-pointer text-sm font-semibold text-slate-900 sm:text-base">Editar clase</summary>
+        <Disclosure titulo="Editar clase" icono={Pencil} className="mt-3">
           <ClaseForm
             clase={{
               id: clase.id,
@@ -135,83 +157,99 @@ export default async function ClaseEnCursoPage({
             unidadDidacticaId={unidadDidacticaId}
             ejes={ejes}
           />
-        </details>
-      </section>
+        </Disclosure>
+      </PageHeader>
 
-      <section className="surface-card p-5 sm:p-6">
-        <div className="flex items-start gap-3 mb-4">
-          <div className="bg-[#0f63ff]/10 p-2.5 text-[#0f63ff]">
-            <TimerReset className="h-5 w-5 sm:h-6 sm:w-6" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">Actividades</h1>
-            <p className="text-sm text-slate-500 sm:text-base">
-              Armá la secuencia de la clase con tiempos claros. Arrastrá para cambiar el orden.
-            </p>
-          </div>
-        </div>
-        <ActividadesLista
-          claseId={claseId}
-          cursoId={cursoId}
-          unidadDidacticaId={unidadDidacticaId}
-          juegos={juegos}
-          actividades={clase.actividades.map((act) => ({
-            id: act.id,
-            tipoBloque: act.tipoBloque,
-            juegoId: act.juegoId,
-            duracionMinutos: act.duracionMinutos,
-            nombreJuego: act.juego?.nombre ?? null,
-          }))}
-        />
+      <SectionCard
+        icono={TimerReset}
+        titulo="Secuencia de la clase"
+        subtitulo="Arrastrá para cambiar el orden. Cada bloque tiene su cronómetro."
+        accion={
+          minutosTotales > 0 ? (
+            <span className="pill pill-brand">
+              <Clock className="h-3.5 w-3.5" />
+              {minutosTotales} min en total
+            </span>
+          ) : undefined
+        }
+      >
+        <div className="space-y-3">
+          <ActividadesLista
+            claseId={claseId}
+            cursoId={cursoId}
+            unidadDidacticaId={unidadDidacticaId}
+            juegos={juegos}
+            actividades={clase.actividades.map((act) => ({
+              id: act.id,
+              tipoBloque: act.tipoBloque,
+              juegoId: act.juegoId,
+              duracionMinutos: act.duracionMinutos,
+              nombreJuego: act.juego?.nombre ?? null,
+            }))}
+          />
 
-        <ActividadForm
-          claseId={claseId}
-          cursoId={cursoId}
-          unidadDidacticaId={unidadDidacticaId}
-          juegos={juegos}
-        />
-      </section>
-
-      <section id="asistencia" className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="surface-card p-5 sm:p-6">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="bg-[#0f63ff]/10 p-2.5 text-[#0f63ff]">
-              <BookOpen className="h-5 w-5 sm:h-6 sm:w-6" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">Asistencia</h1>
-              <p className="text-sm text-slate-500 sm:text-base">Registrá la asistencia de forma rápida.</p>
-            </div>
-          </div>
-          {alumnos.length === 0 ? (
-            <p className="border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-              Este curso no tiene alumnos cargados.
-            </p>
-          ) : (
-            <ListaAsistencia
+          <Disclosure titulo="Agregar actividad" icono={PlusCircle} tono="accion">
+            <ActividadForm
+              claseId={claseId}
               cursoId={cursoId}
-              fecha={fechaISO}
-              claseDiariaId={claseId}
-              alumnos={alumnos}
-              estadosIniciales={estadosIniciales}
+              unidadDidacticaId={unidadDidacticaId}
+              juegos={juegos}
             />
-          )}
+          </Disclosure>
         </div>
-        <div className="surface-card p-5 sm:p-6">
-          <div className="mb-4 flex items-start sm:items-center gap-4">
-            <div className="bg-[#0f63ff]/10 p-2.5 text-[#0f63ff]">
-              <ChartNoAxesCombined className="h-5 w-5 sm:h-6 sm:w-6" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Evaluación</h2>
-              <p className="text-sm sm:text-base text-slate-500">Seguí el desempeño del grupo desde la misma clase.</p>
-            </div>
+      </SectionCard>
+
+      <div className="grid gap-4 sm:gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        <SectionCard
+          icono={ClipboardCheck}
+          titulo="Asistencia"
+          subtitulo="Tocá el estado de cada alumno: se guarda solo."
+          className="scroll-mt-24"
+        >
+          <div id="asistencia">
+            {alumnos.length === 0 ? (
+              <EmptyState
+                icono={ClipboardCheck}
+                titulo="Este curso no tiene alumnos cargados"
+                descripcion="Agregá alumnos desde la ficha del curso para poder tomar asistencia."
+                accion={
+                  <Link href={`/cursos/${cursoId}`} className="button-secondary">
+                    Ir al curso
+                  </Link>
+                }
+              />
+            ) : (
+              <ListaAsistencia
+                cursoId={cursoId}
+                fecha={fechaISO}
+                claseDiariaId={claseId}
+                alumnos={alumnos}
+                estadosIniciales={estadosIniciales}
+              />
+            )}
           </div>
-          <Link href={`/cursos/${cursoId}/clase/${claseId}/evaluacion`} className="button-primary w-full">
-            Ir a evaluar
-          </Link>
-        </div>
-      </section>
+        </SectionCard>
+
+        <SectionCard
+          icono={ChartNoAxesCombined}
+          titulo="Evaluación"
+          subtitulo="Seguí el desempeño del grupo desde la misma clase."
+        >
+          <div className="space-y-3">
+            <p className="rounded-control border border-dashed border-ink-200 bg-ink-50/70 p-3.5 text-sm text-ink-600">
+              Armá rúbricas con los indicadores que te importan y puntuá del 1 al 10, alumno por
+              alumno. Todo queda guardado en esta clase.
+            </p>
+            <Link
+              href={`/cursos/${cursoId}/clase/${claseId}/evaluacion`}
+              className="button-primary w-full"
+            >
+              <ChartNoAxesCombined className="h-4 w-4" />
+              Ir a evaluar
+            </Link>
+          </div>
+        </SectionCard>
+      </div>
     </div>
   );
 }

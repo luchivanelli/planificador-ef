@@ -68,69 +68,69 @@ export default function AddClaseForm({
   );
 
   return (
-    <form id={formId} onSubmit={onSubmit} noValidate className="space-y-2 mt-4">
-      <div className="flex flex-wrap gap-2">
-        <div className="grid grid-cols-2 sm:grid-cols-3 w-full gap-2">
-          <Campo label="Fecha" error={errors.fecha?.message} className="w-full col-span-2 sm:col-span-1">
-            <input {...register("fecha")} type="date" className="input-shell w-full" />
-          </Campo>
-          <Campo label="Hora inicio" error={errors.horaInicio?.message} className="w-full sm:w-auto">
-            <input {...register("horaInicio")} type="time" className="input-shell w-full" />
-          </Campo>
-          <Campo label="Hora fin" error={errors.horaFin?.message} className="w-full sm:w-auto">
-            <input {...register("horaFin")} type="time" className="input-shell w-full" />
-          </Campo>
-        </div>
-        <Campo label="Eje NAP" error={errors.ejeNapId?.message} className="w-full">
-          <div className="grid gap-1.5">
-            {ejes.map((eje) => (
-              <label key={eje.id} className="option-shell">
-                <input {...register("ejeNapId")} type="radio" value={eje.id} />
-                <span>{eje.nombre}</span>
-              </label>
-            ))}
-            <label className="option-shell">
-              <input {...register("ejeNapId")} type="radio" value={EJE_OTRO} />
-              <span>Otro</span>
-            </label>
-          </div>
+    <form id={formId} onSubmit={onSubmit} noValidate className="space-y-4 pt-1">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Campo label="Fecha" error={errors.fecha?.message} className="col-span-2">
+          <input {...register("fecha")} type="date" className="input-shell" />
         </Campo>
-        {ejePropio && (
-          <Campo error={errors.ejeOtro?.message} className="w-full">
-            <input
-              {...register("ejeOtro")}
-              type="text"
-              placeholder="Nombre del eje"
-              className="input-shell w-full"
-            />
-          </Campo>
-        )}
-        <Campo label="Tema" error={errors.temaClase?.message} hint={AYUDA_LISTA} className="w-full">
+        <Campo label="Hora inicio" error={errors.horaInicio?.message}>
+          <input {...register("horaInicio")} type="time" className="input-shell" />
+        </Campo>
+        <Campo label="Hora fin" error={errors.horaFin?.message}>
+          <input {...register("horaFin")} type="time" className="input-shell" />
+        </Campo>
+      </div>
+
+      <Campo label="Eje NAP" error={errors.ejeNapId?.message}>
+        <div className="grid gap-1.5">
+          {ejes.map((eje) => (
+            <label key={eje.id} className="option-shell">
+              <input {...register("ejeNapId")} type="radio" value={eje.id} />
+              <span>{eje.nombre}</span>
+            </label>
+          ))}
+          <label className="option-shell">
+            <input {...register("ejeNapId")} type="radio" value={EJE_OTRO} />
+            <span>Otro</span>
+          </label>
+        </div>
+      </Campo>
+
+      {ejePropio && (
+        <Campo label="Nombre del eje" error={errors.ejeOtro?.message}>
+          <input
+            {...register("ejeOtro")}
+            type="text"
+            placeholder="Ej. Prácticas corporales expresivas"
+            className="input-shell"
+          />
+        </Campo>
+      )}
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <Campo label="Tema" error={errors.temaClase?.message} hint={AYUDA_LISTA}>
           <TextareaLista control={control} name="temaClase" />
         </Campo>
-        <Campo
-          label="Objetivo"
-          error={errors.objetivoClase?.message}
-          hint={AYUDA_LISTA}
-          className="w-full"
-        >
+        <Campo label="Objetivo" error={errors.objetivoClase?.message} hint={AYUDA_LISTA}>
           <TextareaLista control={control} name="objetivoClase" />
         </Campo>
-        <Campo
-          label="Contenidos"
-          error={errors.contenidosClase?.message}
-          hint={AYUDA_LISTA}
-          className="w-full"
-        >
+        <Campo label="Contenidos" error={errors.contenidosClase?.message} hint={AYUDA_LISTA}>
           <TextareaLista control={control} name="contenidosClase" />
         </Campo>
-        <BotonEnviar enviando={isSubmitting} textoEnviando="Agregando..." className="button-primary">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Agregar
-        </BotonEnviar>
       </div>
 
       <ErrorGeneral mensaje={errors.root?.message} />
+
+      <div className="flex justify-end border-t border-linea pt-3">
+        <BotonEnviar
+          enviando={isSubmitting}
+          textoEnviando="Agregando..."
+          className="button-primary w-full sm:w-auto"
+        >
+          <PlusCircle className="h-4 w-4" />
+          Agregar clase
+        </BotonEnviar>
+      </div>
     </form>
   );
 }

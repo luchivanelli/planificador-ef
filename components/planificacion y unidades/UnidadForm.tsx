@@ -65,25 +65,25 @@ export default function UnidadForm({
   );
 
   return (
-    <form id={formId} onSubmit={onSubmit} noValidate className="mt-3 space-y-3">
+    <form id={formId} onSubmit={onSubmit} noValidate className="space-y-4 pt-1">
       <Campo label="Título" error={errors.titulo?.message}>
-        <input {...register("titulo")} className="input-shell w-full" />
+        <input {...register("titulo")} className="input-shell" />
       </Campo>
       <Campo label="Objetivos" error={errors.objetivo?.message} hint={AYUDA_LISTA}>
-        <TextareaLista control={control} name="objetivo" className="input-shell min-h-[92px] w-full" />
+        <TextareaLista control={control} name="objetivo" className="input-shell min-h-24" />
       </Campo>
       <div className="grid gap-3 sm:grid-cols-2">
         <Campo label="Fecha de inicio" error={errors.fechaInicio?.message}>
-          <input {...register("fechaInicio")} type="date" className="input-shell w-full" />
+          <input {...register("fechaInicio")} type="date" className="input-shell" />
         </Campo>
         <Campo label="Fecha de fin" error={errors.fechaFin?.message}>
-          <input {...register("fechaFin")} type="date" className="input-shell w-full" />
+          <input {...register("fechaFin")} type="date" className="input-shell" />
         </Campo>
       </div>
 
       <ErrorGeneral mensaje={errors.root?.message} />
 
-      <div className="flex justify-end">
+      <div className="flex justify-end border-t border-linea pt-3">
         <BotonEnviar enviando={isSubmitting} textoEnviando="Guardando..." className="button-primary">
           Guardar cambios
         </BotonEnviar>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import type { CategoriaJuego, EstrategiaJuego, RangoEtario } from "@prisma/client";
 import { CATEGORIAS, ESTRATEGIAS, RANGOS } from "@/lib/types";
+import SearchInput from "@/components/ui/SearchInput";
 
 export type JuegoOpcion = {
   id: string;
@@ -41,8 +42,28 @@ export default function JuegoPicker({
   const [edad, setEdad] = useState("");
   const [categoria, setCategoria] = useState("");
   const [estrategia, setEstrategia] = useState("");
+  const contenedor = useRef<HTMLDivElement | null>(null);
 
   const seleccionado = juegos.find((juego) => juego.id === valor) ?? null;
+
+  // Se cierra al tocar afuera o con Escape, como cualquier desplegable.
+  useEffect(() => {
+    if (!abierto) return;
+
+    const alTocarAfuera = (evento: MouseEvent) => {
+      if (!contenedor.current?.contains(evento.target as Node)) setAbierto(false);
+    };
+    const alTeclear = (evento: KeyboardEvent) => {
+      if (evento.key === "Escape") setAbierto(false);
+    };
+
+    document.addEventListener("mousedown", alTocarAfuera);
+    document.addEventListener("keydown", alTeclear);
+    return () => {
+      document.removeEventListener("mousedown", alTocarAfuera);
+      document.removeEventListener("keydown", alTeclear);
+    };
+  }, [abierto]);
 
   const filtrados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase();
@@ -62,33 +83,39 @@ export default function JuegoPicker({
   }
 
   return (
-    <div>
+    <div ref={contenedor} className="relative">
       <button
         type="button"
         onClick={() => setAbierto((estaAbierto) => !estaAbierto)}
         aria-expanded={abierto}
-        className="input-shell flex w-full items-center justify-between gap-2 text-left"
+        className="input-shell flex items-center justify-between gap-2 text-left"
       >
-        <span className={seleccionado ? "truncate" : "truncate text-slate-900"}>
-          {seleccionado?.nombre ?? SIN_JUEGO}
+        <span className="min-w-0">
+          <span
+            className={`block truncate ${seleccionado ? "font-semibold text-ink-900" : "text-ink-400"}`}
+          >
+            {seleccionado?.nombre ?? SIN_JUEGO}
+          </span>
+          {seleccionado && (
+            <span className="block truncate text-xs text-ink-500">{etiquetaDe(seleccionado)}</span>
+          )}
         </span>
-        <ChevronDown className={`h-4 w-4 shrink-0 text-slate-900 ${abierto ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-ink-400 transition ${abierto ? "rotate-180" : ""}`}
+        />
       </button>
 
       {abierto && (
-        <div className="mt-1 border border-slate-200 bg-white p-2">
-          <div className="relative">
-            <input
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar juego por nombre"
-              className="input-shell w-full pl-8"
-              autoFocus
-            />
-          </div>
+        <div className="animar-entrada absolute left-0 right-0 z-30 mt-1 rounded-control border border-linea bg-white p-2.5 shadow-pop">
+          <SearchInput
+            valor={busqueda}
+            onCambio={setBusqueda}
+            placeholder="Buscar juego por nombre"
+            autoFocus
+          />
 
-          <div className="mt-2 grid gap-1 sm:grid-cols-3">
-            <select value={edad} onChange={(e) => setEdad(e.target.value)} className="input-shell w-full">
+          <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
+            <select value={edad} onChange={(e) => setEdad(e.target.value)} className="input-shell">
               <option value="">Todas las edades</option>
               {RANGOS.map((r) => (
                 <option key={r.value} value={r.value}>
@@ -99,7 +126,7 @@ export default function JuegoPicker({
             <select
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
-              className="input-shell w-full"
+              className="input-shell"
             >
               <option value="">Todas las categorías</option>
               {CATEGORIAS.map((c) => (
@@ -111,7 +138,7 @@ export default function JuegoPicker({
             <select
               value={estrategia}
               onChange={(e) => setEstrategia(e.target.value)}
-              className="input-shell w-full"
+              className="input-shell"
             >
               <option value="">Todas las estrategias</option>
               {ESTRATEGIAS.map((e) => (
@@ -122,15 +149,15 @@ export default function JuegoPicker({
             </select>
           </div>
 
-          <ul className="mt-2 max-h-[200px] overflow-y-auto">
+          <ul className="mt-2 max-h-64 overflow-y-auto">
             <li>
               <button
                 type="button"
                 onClick={() => elegir("")}
-                className="flex w-full items-center justify-between gap-2 px-2 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
+                className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-ink-500 transition hover:bg-ink-50"
               >
                 {SIN_JUEGO}
-                {!seleccionado && <Check className="h-4 w-4 shrink-0 text-[#0f63ff]" />}
+                {!seleccionado && <Check className="h-4 w-4 shrink-0 text-brand-600" />}
               </button>
             </li>
             {filtrados.map((juego) => (
@@ -138,20 +165,24 @@ export default function JuegoPicker({
                 <button
                   type="button"
                   onClick={() => elegir(juego.id)}
-                  className="flex w-full items-center justify-between gap-2 px-2 py-2 text-left hover:bg-slate-50"
+                  className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left transition hover:bg-ink-50 ${
+                    juego.id === valor ? "bg-brand-50" : ""
+                  }`}
                 >
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-slate-900">{juego.nombre}</span>
-                    <span className="block truncate text-xs text-slate-500">{etiquetaDe(juego)}</span>
+                    <span className="block truncate text-sm font-semibold text-ink-900">
+                      {juego.nombre}
+                    </span>
+                    <span className="block truncate text-xs text-ink-500">{etiquetaDe(juego)}</span>
                   </span>
-                  {juego.id === valor && <Check className="h-4 w-4 shrink-0 text-[#0f63ff]" />}
+                  {juego.id === valor && <Check className="h-4 w-4 shrink-0 text-brand-600" />}
                 </button>
               </li>
             ))}
           </ul>
 
           {filtrados.length === 0 && (
-            <p className="px-2 py-3 text-center text-sm text-slate-500">
+            <p className="px-2 py-3 text-center text-sm text-ink-500">
               Ningún juego coincide con la búsqueda.
             </p>
           )}

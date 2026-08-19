@@ -7,26 +7,45 @@ import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Campo, ErrorGeneral } from "@/components/form/Campo";
 import BotonEnviar from "@/components/form/BotonEnviar";
-import { rubricaSchema } from "@/lib/schemas/evaluacion.schema";
+import { rubricaEdicionSchema } from "@/lib/schemas/evaluacion.schema";
 import { enviarFormulario } from "@/lib/form/enviar-formulario";
 import { cerrarDetails } from "@/lib/form/cerrar-details";
-import { crearRubrica } from "@/lib/actions/evaluacion.actions";
+import { actualizarRubrica } from "@/lib/actions/evaluacion.actions";
 
-const VALORES_INICIALES = { nombre: "", indicadores: [{ nombre: "" }] };
+export type RubricaEditable = {
+  id: string;
+  nombre: string;
+  indicadores: { id: string; nombre: string }[];
+};
 
-export default function RubricaForm({ cursoId, claseId }: { cursoId: string; claseId: string }) {
+export default function EditarRubricaForm({
+  rubrica,
+  cursoId,
+  claseId,
+}: {
+  rubrica: RubricaEditable;
+  cursoId: string;
+  claseId: string;
+}) {
   const router = useRouter();
-  const formId = `rubrica-form-${claseId}`;
+  const formId = `editar-rubrica-form-${rubrica.id}`;
   const {
     register,
     control,
     handleSubmit,
     setError,
-    reset,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(rubricaSchema),
-    defaultValues: VALORES_INICIALES,
+    resolver: zodResolver(rubricaEdicionSchema),
+    defaultValues: {
+      nombre: rubrica.nombre,
+      // Los indicadores que ya existen viajan con su `id`: así la acción los
+      // actualiza en vez de borrarlos y volverlos a crear.
+      indicadores: rubrica.indicadores.map((indicador) => ({
+        id: indicador.id,
+        nombre: indicador.nombre,
+      })),
+    },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "indicadores" });
@@ -34,11 +53,10 @@ export default function RubricaForm({ cursoId, claseId }: { cursoId: string; cla
   const onSubmit = handleSubmit((datos) =>
     enviarFormulario({
       setError,
-      accion: () => crearRubrica(cursoId, claseId, datos),
-      errorInesperado: "No se pudo crear la rúbrica",
+      accion: () => actualizarRubrica(rubrica.id, cursoId, claseId, datos),
+      errorInesperado: "No se pudo actualizar la rúbrica",
       onExito: () => {
-        toast.success("Rúbrica creada");
-        reset(VALORES_INICIALES);
+        toast.success("Rúbrica actualizada");
         cerrarDetails(formId);
         router.refresh();
       },
@@ -57,6 +75,9 @@ export default function RubricaForm({ cursoId, claseId }: { cursoId: string; cla
 
       <div className="space-y-2">
         <p className="field-label">Indicadores</p>
+        <p className="-mt-1 mb-1 text-xs text-ink-400">
+          Si quitás un indicador, se borran los puntajes que ya cargaste en él.
+        </p>
         {fields.map((field, i) => (
           <Campo key={field.id} error={errors.indicadores?.[i]?.nombre?.message}>
             <div className="flex items-center gap-2">
@@ -65,7 +86,7 @@ export default function RubricaForm({ cursoId, claseId }: { cursoId: string; cla
               </span>
               <input
                 {...register(`indicadores.${i}.nombre`)}
-                placeholder={`Ej. Participa y coopera con el grupo`}
+                placeholder={`Indicador ${i + 1}`}
                 className="input-shell"
               />
               <button
@@ -97,10 +118,10 @@ export default function RubricaForm({ cursoId, claseId }: { cursoId: string; cla
       <div className="flex justify-end border-t border-linea pt-3">
         <BotonEnviar
           enviando={isSubmitting}
-          textoEnviando="Creando..."
+          textoEnviando="Guardando..."
           className="button-primary w-full sm:w-auto"
         >
-          Crear rúbrica
+          Guardar cambios
         </BotonEnviar>
       </div>
     </form>

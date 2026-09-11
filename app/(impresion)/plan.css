@@ -25,8 +25,13 @@
 }
 
 /* El ancho de la hoja está en milímetros para que lo que se ve en pantalla sea
-   exactamente lo que entra en la página impresa. */
+   exactamente lo que entra en la página impresa. Nunca cambia: cuando la
+   pantalla es más angosta que una A4, la hoja entera se achica con "zoom"
+   (VisorHoja calcula cuánto) en vez de reacomodar el contenido, así la vista
+   previa se sigue pareciendo al archivo. La variable --plan-zoom-inicial es la
+   aproximación que vale hasta que el visor mide de verdad. */
 .plan-hoja {
+  zoom: var(--plan-zoom, var(--plan-zoom-inicial, 1));
   width: 210mm;
   min-height: 297mm;
   margin: 0 auto;
@@ -348,6 +353,33 @@
   min-height: 100vh;
 }
 
+/* La ventanita por la que se mira la hoja. En tamaño real la A4 es más ancha
+   que un celular: se desplaza de costado en vez de desbordar la pantalla. */
+.plan-visor {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* Flotante, encima de la hoja: sólo aparece cuando la A4 no entra entera. */
+.plan-zoom {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid #3f4655;
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  background: #111827;
+  color: #e5e7eb;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.5);
+}
+
 .plan-barra {
   position: sticky;
   top: 0;
@@ -405,28 +437,40 @@
   background: #1f2534;
 }
 
-/* Celular: la hoja a tamaño real no entra, se adapta al ancho disponible. */
+/* Celular: la hoja a tamaño real no entra. No se reacomoda el contenido (la
+   tabla del desarrollo de la clase tiene cuatro columnas y queda ilegible):
+   se achica la hoja entera y se deja agrandarla con los dedos o con el botón.
+   Estos valores son sólo el arranque, antes de que el visor mida la pantalla. */
 @media (max-width: 230mm) {
-  .plan-hoja {
+  .plan-lienzo {
+    padding: 1rem 0.5rem 3rem;
+  }
+
+  .plan-visor {
+    --plan-zoom-inicial: 0.85;
+  }
+}
+
+@media (max-width: 480px) {
+  .plan-visor {
+    --plan-zoom-inicial: 0.45;
+  }
+}
+
+/* La barra ocupa poco: en el celular se va el texto y quedan los dos botones,
+   grandes, que es lo que se toca. */
+@media (max-width: 600px) {
+  .plan-barra p {
+    display: none;
+  }
+
+  .plan-barra-acciones {
     width: 100%;
-    min-height: 0;
-    padding: 6mm 5mm;
   }
 
-  .plan-ficha {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  /* Con dos columnas, cualquier casillero ancho ocupa el renglón entero: un
-     `span 3` crearía una tercera columna que se sale de la hoja. */
-  .plan-dato-2,
-  .plan-dato-3 {
-    grid-column: span 2;
-  }
-
-  .plan-columnas,
-  .plan-columnas-2 {
-    grid-template-columns: 1fr;
+  .plan-barra-acciones > * {
+    flex: 1;
+    justify-content: center;
   }
 }
 
@@ -446,7 +490,13 @@
     min-height: 0;
   }
 
+  .plan-visor {
+    overflow: visible;
+  }
+
   .plan-hoja {
+    /* El zoom es de la vista previa: en el papel la hoja va a tamaño real. */
+    zoom: 1;
     width: auto;
     min-height: 0;
     margin: 0;

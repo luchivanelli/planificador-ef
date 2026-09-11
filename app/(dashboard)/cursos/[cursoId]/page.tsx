@@ -201,8 +201,7 @@ export default async function CursoPage({
       <SectionCard
         icono={Users}
         titulo="Alumnos"
-        subtitulo="Buscá, agregá y gestioná los alumnos de este curso."
-        
+        subtitulo="Buscá, agregá y gestioná los alumnos de este curso."     
       >
         <AlumnosSearch alumnos={alumnos} cursoId={cursoId} />
         <AddAlumnoClient cursoId={cursoId} />

@@ -52,7 +52,7 @@ const s = StyleSheet.create({
     borderBottomColor: C.marca,
     paddingBottom: 8,
   },
-  titulo: { fontSize: 17, fontFamily: "Helvetica-Bold", color: C.tinta },
+  titulo: { fontSize: 17, fontFamily: "Helvetica-Bold", color: C.tinta, paddingBottom: 4 },
   bajada: { fontSize: 8.5, color: C.suave, marginTop: 3 },
   institucion: { maxWidth: 200, textAlign: "right" },
   institucionNombre: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: C.tinta },

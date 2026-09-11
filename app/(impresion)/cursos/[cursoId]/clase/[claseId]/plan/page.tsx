@@ -9,6 +9,7 @@ import {
 } from "@/lib/clases/plan-clase";
 import { aFecha, aFechaLegible, diaEnZona } from "@/lib/schemas/common";
 import BarraPlan from "@/components/clase/BarraPlan";
+import VisorHoja from "@/components/clase/VisorHoja";
 
 /**
  * La vista previa del plan de clase: la misma hoja A4 que sale en el PDF, para
@@ -71,92 +72,94 @@ export default async function PlanDeClasePage({
         descargarEn={`/cursos/${cursoId}/clase/${claseId}/plan/pdf`}
       />
 
-      <article className="plan-hoja">
-        <header className="plan-encabezado">
-          <div>
-            <h1 className="plan-titulo">Plan de clase</h1>
-            <p className="plan-bajada">
-              {curso.nombre}
-              {unidad.titulo && ` · Unidad didáctica N° ${unidad.numero}: ${unidad.titulo}`}
+      <VisorHoja>
+        <article className="plan-hoja">
+          <header className="plan-encabezado">
+            <div>
+              <h1 className="plan-titulo">Plan de clase</h1>
+              <p className="plan-bajada">
+                {curso.nombre}
+                {unidad.titulo && ` · Unidad didáctica N° ${unidad.numero}: ${unidad.titulo}`}
+              </p>
+            </div>
+            <div className="plan-institucion">
+              <strong>{institucion.nombre}</strong>
+              <span>Año lectivo {curso.anioLectivo}</span>
+            </div>
+          </header>
+
+          {aviso && (
+            <p className="plan-aviso">
+              {aviso}
+              {clase.motivoCancelacion && ` — ${clase.motivoCancelacion}`}
             </p>
-          </div>
-          <div className="plan-institucion">
-            <strong>{institucion.nombre}</strong>
-            <span>Año lectivo {curso.anioLectivo}</span>
-          </div>
-        </header>
+          )}
 
-        {aviso && (
-          <p className="plan-aviso">
-            {aviso}
-            {clase.motivoCancelacion && ` — ${clase.motivoCancelacion}`}
-          </p>
-        )}
+          <section className="plan-ficha">
+            <Dato etiqueta="Docente" valor={`Prof. ${plan.docente}`} columnas={2} />
+            <Dato etiqueta="Fecha" valor={fechaConDia(clase.fecha)} />
+            <Dato
+              etiqueta="Horario"
+              valor={
+                clase.horaInicio && clase.horaFin ? `${clase.horaInicio} a ${clase.horaFin}` : null
+              }
+            />
+            <Dato etiqueta="Curso" valor={curso.nombre} />
+            <Dato
+              etiqueta="Nivel y ciclo"
+              valor={[curso.nivel, curso.ciclo].filter(Boolean).join(" · ")}
+            />
+            <Dato etiqueta="Turno" valor={curso.turno} />
+            <Dato etiqueta="Cantidad de alumnos" valor={String(curso.cantidadAlumnos)} />
+            <Dato etiqueta="Eje / NAP" valor={clase.eje} columnas={3} />
+            <Dato
+              etiqueta="Duración total"
+              valor={plan.minutosTotales > 0 ? `${plan.minutosTotales} min` : null}
+            />
+          </section>
 
-        <section className="plan-ficha">
-          <Dato etiqueta="Docente" valor={`Prof. ${plan.docente}`} columnas={2} />
-          <Dato etiqueta="Fecha" valor={fechaConDia(clase.fecha)} />
-          <Dato
-            etiqueta="Horario"
-            valor={
-              clase.horaInicio && clase.horaFin ? `${clase.horaInicio} a ${clase.horaFin}` : null
-            }
-          />
-          <Dato etiqueta="Curso" valor={curso.nombre} />
-          <Dato
-            etiqueta="Nivel y ciclo"
-            valor={[curso.nivel, curso.ciclo].filter(Boolean).join(" · ")}
-          />
-          <Dato etiqueta="Turno" valor={curso.turno} />
-          <Dato etiqueta="Cantidad de alumnos" valor={String(curso.cantidadAlumnos)} />
-          <Dato etiqueta="Eje / NAP" valor={clase.eje} columnas={3} />
-          <Dato
-            etiqueta="Duración total"
-            valor={plan.minutosTotales > 0 ? `${plan.minutosTotales} min` : null}
-          />
-        </section>
+          <section className="plan-columnas plan-seccion">
+            <Caja titulo="Tema general" items={clase.tema} />
+            <Caja titulo="Objetivos específicos" items={clase.objetivos} />
+            <Caja titulo="Contenidos" items={clase.contenidos} />
+          </section>
 
-        <section className="plan-columnas plan-seccion">
-          <Caja titulo="Tema general" items={clase.tema} />
-          <Caja titulo="Objetivos específicos" items={clase.objetivos} />
-          <Caja titulo="Contenidos" items={clase.contenidos} />
-        </section>
+          <section className="plan-seccion">
+            <h2 className="plan-seccion-titulo">Desarrollo de la clase</h2>
+            <TablaSecuencia partes={partes} minutosTotales={plan.minutosTotales} />
+          </section>
 
-        <section className="plan-seccion">
-          <h2 className="plan-seccion-titulo">Desarrollo de la clase</h2>
-          <TablaSecuencia partes={partes} minutosTotales={plan.minutosTotales} />
-        </section>
+          <section className="plan-columnas-2 plan-seccion">
+            <Caja
+              titulo="Evaluación de la clase · indicadores"
+              items={indicadores.map((indicador) =>
+                indicador.rubrica ? `${indicador.rubrica}: ${indicador.nombre}` : indicador.nombre
+              )}
+              vacio="Sin indicadores cargados para esta clase."
+            />
+            <Caja
+              titulo="Recursos materiales"
+              items={materiales}
+              vacio="Sin materiales cargados."
+            />
+          </section>
 
-        <section className="plan-columnas-2 plan-seccion">
-          <Caja
-            titulo="Evaluación de la clase · indicadores"
-            items={indicadores.map((indicador) =>
-              indicador.rubrica ? `${indicador.rubrica}: ${indicador.nombre}` : indicador.nombre
-            )}
-            vacio="Sin indicadores cargados para esta clase."
-          />
-          <Caja
-            titulo="Recursos materiales"
-            items={materiales}
-            vacio="Sin materiales cargados."
-          />
-        </section>
+          <section className="plan-seccion">
+            <h2 className="plan-seccion-titulo">Observaciones</h2>
+            <p className="plan-vacio no-imprimir">
+              Espacio para anotar a mano lo que pasó en la clase.
+            </p>
+            <div className="plan-renglones" />
+          </section>
 
-        <section className="plan-seccion">
-          <h2 className="plan-seccion-titulo">Observaciones</h2>
-          <p className="plan-vacio no-imprimir">
-            Espacio para anotar a mano lo que pasó en la clase.
-          </p>
-          <div className="plan-renglones" />
-        </section>
-
-        <footer className="plan-pie">
-          <span>Planificador EF · Generado el {aFechaLegible(aFecha(diaEnZona()))}</span>
-          <span>
-            {institucion.nombre} · {curso.nombre} · {aFechaLegible(clase.fecha)}
-          </span>
-        </footer>
-      </article>
+          <footer className="plan-pie">
+            <span>Planificador EF · Generado el {aFechaLegible(aFecha(diaEnZona()))}</span>
+            <span>
+              {institucion.nombre} · {curso.nombre} · {aFechaLegible(clase.fecha)}
+            </span>
+          </footer>
+        </article>
+      </VisorHoja>
     </div>
   );
 }

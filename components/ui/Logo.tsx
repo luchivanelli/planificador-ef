@@ -13,7 +13,7 @@ export default function Logo({
 }) {
   const contenido = (
     <>
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-[0_10px_20px_-10px_rgba(79,70,229,0.9)]">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accion to-accion-fuerte text-white shadow-[0_10px_20px_-10px_rgba(79,70,229,0.9)]">
         <Volleyball className="h-5 w-5" />
       </span>
       <span className="min-w-0">

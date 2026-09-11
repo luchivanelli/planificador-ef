@@ -65,7 +65,7 @@ export default function DashboardNav({ variante = "lateral" }: { variante?: "lat
             aria-current={activo ? "page" : undefined}
             className={`group flex items-center gap-3 rounded-control px-3 py-2.5 text-sm font-semibold transition ${
               activo
-                ? "bg-brand-600 text-white shadow-[0_10px_20px_-12px_rgba(79,70,229,0.9)]"
+                ? "bg-accion text-white shadow-[0_10px_20px_-12px_rgba(79,70,229,0.9)]"
                 : "text-ink-600 hover:bg-brand-50 hover:text-brand-700"
             }`}
           >

@@ -16,7 +16,7 @@ import {
 } from "@/lib/schemas/clase.schema";
 import { enviarFormulario } from "@/lib/form/enviar-formulario";
 import { actualizarActividad, agregarActividad } from "@/lib/actions/clases.actions";
-import { TIPOS_BLOQUE } from "@/lib/types";
+import { CATEGORIAS, ESTRATEGIAS, JUEGO_NUEVO, RANGOS, TIPOS_BLOQUE } from "@/lib/types";
 
 export type { JuegoOpcion };
 
@@ -51,13 +51,34 @@ export default function ActividadForm({
   const router = useRouter();
   const esEdicion = Boolean(actividad);
 
+  /**
+   * El bloque de juego nuevo viaja siempre, aunque esté oculto: así los campos
+   * tienen valor desde el arranque y no hace falta montarlos para poder guardar.
+   * Sólo se usa si el juego elegido es `JUEGO_NUEVO` (lo decide el esquema).
+   */
+  const juegoNuevoVacio = {
+    nombre: "",
+    descripcion: "",
+    rangoEtario: RANGOS[0].value,
+    categoria: CATEGORIAS[0].value,
+    estrategia: ESTRATEGIAS[0].value,
+    materiales: "",
+    guardarEnBanco: false,
+  };
+
   const valoresIniciales: ActividadFormValues = actividad
     ? {
         tipoBloque: actividad.tipoBloque,
         juegoId: actividad.juegoId ?? "",
+        juegoNuevo: juegoNuevoVacio,
         duracionMinutos: actividad.duracionMinutos,
       }
-    : { tipoBloque: "desarrollo" as const, juegoId: "", duracionMinutos: 10 };
+    : {
+        tipoBloque: "desarrollo" as const,
+        juegoId: "",
+        juegoNuevo: juegoNuevoVacio,
+        duracionMinutos: 10,
+      };
 
   const {
     register,
@@ -101,6 +122,77 @@ export default function ActividadForm({
     />
   );
 
+  // Los mismos campos que el formulario del banco (`JuegoForm`): la docente
+  // carga el juego sin salir de la clase y decide si lo guarda para reutilizarlo.
+  const camposJuegoNuevo = juegoElegido === JUEGO_NUEVO && (
+    <div className="space-y-3 rounded-control border border-brand-200 bg-brand-50/50 p-3">
+      <Campo label="Nombre del juego" error={errors.juegoNuevo?.nombre?.message}>
+        <input
+          {...register("juegoNuevo.nombre")}
+          placeholder="Ej. Los diez pases"
+          className="input-shell"
+        />
+      </Campo>
+      <Campo label="Descripción" error={errors.juegoNuevo?.descripcion?.message}>
+        <textarea
+          {...register("juegoNuevo.descripcion")}
+          placeholder="Cómo se juega, cuántos participan, variantes..."
+          rows={3}
+          className="input-shell"
+        />
+      </Campo>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Campo label="Rango etario" error={errors.juegoNuevo?.rangoEtario?.message}>
+          <select {...register("juegoNuevo.rangoEtario")} className="input-shell">
+            {RANGOS.map((rango) => (
+              <option key={rango.value} value={rango.value}>
+                {rango.label}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <Campo label="Categoría" error={errors.juegoNuevo?.categoria?.message}>
+          <select {...register("juegoNuevo.categoria")} className="input-shell">
+            {CATEGORIAS.map((categoria) => (
+              <option key={categoria.value} value={categoria.value}>
+                {categoria.label}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <Campo label="Estrategia" error={errors.juegoNuevo?.estrategia?.message}>
+          <select {...register("juegoNuevo.estrategia")} className="input-shell">
+            {ESTRATEGIAS.map((estrategia) => (
+              <option key={estrategia.value} value={estrategia.value}>
+                {estrategia.label}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <Campo
+          label="Materiales"
+          error={errors.juegoNuevo?.materiales?.message}
+          hint="Separalos con comas: conos, pelotas, aros."
+        >
+          <input
+            {...register("juegoNuevo.materiales")}
+            placeholder="Conos, pelotas"
+            className="input-shell"
+          />
+        </Campo>
+      </div>
+      <label className="option-shell">
+        <input type="checkbox" {...register("juegoNuevo.guardarEnBanco")} />
+        <span>
+          Guardar este juego en el banco
+          <span className="block text-xs font-normal text-ink-500">
+            Sin tildar, el juego queda sólo en esta clase.
+          </span>
+        </span>
+      </label>
+    </div>
+  );
+
   const selectTipoBloque = (
     <select {...register("tipoBloque")} className="input-shell">
       {TIPOS_BLOQUE.map((tipo) => (
@@ -136,6 +228,7 @@ export default function ActividadForm({
         <Campo label="Juego" error={errors.juegoId?.message}>
           {buscadorJuego}
         </Campo>
+        {camposJuegoNuevo}
         <div className="grid gap-3 sm:grid-cols-2">
           <Campo label="Momento de la clase" error={errors.tipoBloque?.message}>
             {selectTipoBloque}
@@ -173,6 +266,7 @@ export default function ActividadForm({
       <Campo label="Juego" error={errors.juegoId?.message}>
         {buscadorJuego}
       </Campo>
+      {camposJuegoNuevo}
       <div className="grid gap-3 sm:grid-cols-2">
         <Campo label="Momento de la clase" error={errors.tipoBloque?.message}>
           {selectTipoBloque}

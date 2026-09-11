@@ -57,7 +57,7 @@ export default function JuegosLista({
             descripcion="Probá con otra búsqueda, o cargá un juego nuevo al banco."
           />
         ) : (
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-3 lg:grid-cols-2 overflow-y-auto max-h-[400px]">
             {filtrados.map((juego) => (
               <JuegoItem key={juego.id} juego={juego} />
             ))}

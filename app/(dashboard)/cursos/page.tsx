@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus, School, SlidersHorizontal } from "lucide-react";
 import { db } from "@/lib/db";
+import { requerirDocente } from "@/lib/auth";
 import { buildCursosHref, getCursoFilterValues } from "@/lib/curso-filters";
 import { NIVELES, TURNOS } from "@/lib/types";
 import CursoCard from "@/components/curso/CursoCard";
@@ -15,8 +16,13 @@ const cursosPage = async ({
   const rawParams = await searchParams;
   const { nivel, turno } = getCursoFilterValues(rawParams);
 
+  // Antes de tocar la base: sin sesión no se llega a consultar nada.
+  const docente = await requerirDocente();
+
   const cursos = await db.curso.findMany({
+    // Cada docente ve sólo sus cursos: el listado no es del colegio.
     where: {
+      docenteId: docente.id,
       nivel,
       turno,
     },

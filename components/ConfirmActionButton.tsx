@@ -146,7 +146,7 @@ export default function ConfirmActionButton({
       role="dialog"
       aria-modal="true"
       aria-label={confirmTitle}
-      className="fixed inset-0 z-100 flex items-end justify-center bg-ink-900/50 p-4 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-100 flex items-end justify-center bg-ink-900/50 p-4 backdrop-blur-sm dark:bg-black/65 sm:items-center"
       onClick={(evento) => {
         if (evento.target === evento.currentTarget) setAbierto(false);
       }}

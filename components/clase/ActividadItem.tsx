@@ -5,7 +5,6 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, GripVertical, Timer } from "lucide-react";
 import ActividadForm, { type ActividadEditable, type JuegoOpcion } from "@/components/clase/ActividadForm";
-import Cronometro from "@/components/Cronometro";
 import { TIPOS_BLOQUE } from "@/lib/types";
 
 export type ActividadListada = ActividadEditable & { nombreJuego: string | null };
@@ -37,7 +36,6 @@ export default function ActividadItem({
   actividad: ActividadListada;
 }) {
   const [abierto, setAbierto] = useState(false);
-  const [cronometro, setCronometro] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: actividad.id,
   });
@@ -90,34 +88,8 @@ export default function ActividadItem({
                 </span>
               </span>
 
-              <span className="flex shrink-0 items-center gap-1">
-                <span
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Mostrar cronómetro"
-                  onClick={(evento) => {
-                    // Está dentro del `<summary>`: sin esto, además de prender el
-                    // cronómetro abriría el formulario de edición.
-                    evento.preventDefault();
-                    evento.stopPropagation();
-                    setCronometro((c) => !c);
-                  }}
-                  onKeyDown={(evento) => {
-                    if (evento.key !== "Enter" && evento.key !== " ") return;
-                    evento.preventDefault();
-                    setCronometro((c) => !c);
-                  }}
-                  className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
-                    cronometro
-                      ? "bg-brand-100 text-brand-700"
-                      : "text-ink-400 hover:bg-ink-100 hover:text-brand-600"
-                  }`}
-                >
-                  <Timer className="h-4 w-4" />
-                </span>
-                <span className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400">
-                  <ChevronDown className={`h-4 w-4 transition ${abierto ? "rotate-180" : ""}`} />
-                </span>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-400">
+                <ChevronDown className={`h-4 w-4 transition ${abierto ? "rotate-180" : ""}`} />
               </span>
             </summary>
 
@@ -132,12 +104,6 @@ export default function ActividadItem({
               />
             )}
           </details>
-
-          {cronometro && (
-            <div className="mt-3">
-              <Cronometro duracionMinutos={actividad.duracionMinutos} titulo={nombre} />
-            </div>
-          )}
         </div>
       </div>
     </div>

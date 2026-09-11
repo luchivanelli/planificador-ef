@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { EJE_OTRO } from "@/lib/types";
+import { EJE_OTRO, JUEGO_NUEVO } from "@/lib/types";
+import { juegoNuevoSchema } from "./juego.schema";
 import {
   enteroRequerido,
   fechaRequerida,
@@ -50,15 +51,23 @@ export const claseSchema = z
     path: ["ejeOtro"],
   });
 
-export const actividadSchema = z.object({
-  tipoBloque: z.enum(["entrada_calor", "desarrollo", "vuelta_calma"], {
-    error: "Elegí un tipo de bloque",
-  }),
-  juegoId: idOpcional,
-  duracionMinutos: enteroRequerido("La duración", 1, 240),
-  orden: enteroRequerido("El orden", 1, 99).optional(),
-  duracionRealMinutos: enteroRequerido("La duración real", 0, 240).optional(),
-});
+export const actividadSchema = z
+  .object({
+    tipoBloque: z.enum(["entrada_calor", "desarrollo", "vuelta_calma"], {
+      error: "Elegí un tipo de bloque",
+    }),
+    // Un id del banco, vacío ("sin juego específico") o el centinela
+    // `JUEGO_NUEVO`, que pide cargar el juego acá mismo con `juegoNuevo`.
+    juegoId: idOpcional,
+    juegoNuevo: juegoNuevoSchema.optional(),
+    duracionMinutos: enteroRequerido("La duración", 1, 240),
+    orden: enteroRequerido("El orden", 1, 99).optional(),
+    duracionRealMinutos: enteroRequerido("La duración real", 0, 240).optional(),
+  })
+  .refine((datos) => datos.juegoId !== JUEGO_NUEVO || Boolean(datos.juegoNuevo?.nombre), {
+    error: "El nombre del juego es obligatorio",
+    path: ["juegoNuevo", "nombre"],
+  });
 
 /** Lo que valida y recibe la acción (con los `default` ya aplicados). */
 export type ClaseInput = z.infer<typeof claseSchema>;

@@ -1,0 +1,468 @@
+/* ==========================================================================
+   PLAN DE CLASE IMPRIMIBLE
+
+   Hoja A4 pensada para salir por impresora o "Guardar como PDF". No usa los
+   tokens de `globals.css` a propósito: aquellos se dan vuelta en modo oscuro y
+   el papel es siempre blanco. Todos los colores de acá son fijos y con
+   suficiente contraste para imprimir incluso en escala de grises.
+   ========================================================================== */
+
+.plan {
+  --plan-tinta: #111827;
+  --plan-texto: #333d4e;
+  --plan-suave: #6b7280;
+  --plan-marca: #4338ca;
+  --plan-marca-fondo: #eef2ff;
+  --plan-linea: #c8cedb;
+  --plan-linea-suave: #e5e8ef;
+  --plan-fondo-suave: #f6f7fb;
+
+  color-scheme: light;
+  background: #ffffff;
+  color: var(--plan-texto);
+  font-size: 9.6pt;
+  line-height: 1.45;
+}
+
+/* El ancho de la hoja está en milímetros para que lo que se ve en pantalla sea
+   exactamente lo que entra en la página impresa. */
+.plan-hoja {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 13mm 12mm;
+  background: #ffffff;
+  box-shadow: 0 10px 40px -12px rgba(15, 23, 42, 0.35);
+}
+
+/* --- Encabezado --------------------------------------------------------- */
+
+.plan-encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10mm;
+  border-bottom: 1.5pt solid var(--plan-marca);
+  padding-bottom: 3mm;
+}
+
+.plan-titulo {
+  font-size: 17pt;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--plan-tinta);
+}
+
+.plan-bajada {
+  margin-top: 1mm;
+  font-size: 9.5pt;
+  color: var(--plan-suave);
+}
+
+.plan-institucion {
+  text-align: right;
+  max-width: 70mm;
+}
+
+.plan-institucion strong {
+  display: block;
+  font-size: 10pt;
+  color: var(--plan-tinta);
+}
+
+.plan-institucion span {
+  display: block;
+  font-size: 8.5pt;
+  color: var(--plan-suave);
+}
+
+/* Sólo aparece cuando la clase no se dictó: no puede pasar desapercibido en un
+   plan que se entrega, así que va en rojo y con borde propio. */
+.plan-aviso {
+  margin-top: 3mm;
+  border: 1pt solid #f3c2c2;
+  border-left: 2.5pt solid #b91c1c;
+  border-radius: 1.5mm;
+  background: #fdf2f2;
+  padding: 1.5mm 3mm;
+  font-size: 8.6pt;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+/* --- Ficha de datos ----------------------------------------------------- */
+
+/* Cuatro columnas de igual ancho: los datos cortos (fecha, horario, alumnos)
+   quedan alineados en una grilla en vez de en celdas desparejas. */
+.plan-ficha {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  /* Las líneas divisorias son el fondo de la grilla asomando por el `gap`: así
+     no hay que apagar bordes en la última fila ni en la última columna, y las
+     celdas que ocupan dos columnas se acomodan solas. */
+  gap: 0.75pt;
+  background: var(--plan-linea);
+  border: 1pt solid var(--plan-linea);
+  border-radius: 2mm;
+  overflow: hidden;
+  margin-top: 4mm;
+}
+
+.plan-dato {
+  background: #ffffff;
+  padding: 2mm 3mm;
+  min-width: 0;
+}
+
+.plan-dato-2 {
+  grid-column: span 2;
+}
+
+.plan-dato-3 {
+  grid-column: span 3;
+}
+
+.plan-etiqueta {
+  display: block;
+  font-size: 6.6pt;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--plan-suave);
+}
+
+.plan-valor {
+  display: block;
+  margin-top: 0.5mm;
+  font-size: 9.5pt;
+  font-weight: 600;
+  color: var(--plan-tinta);
+  overflow-wrap: anywhere;
+}
+
+/* --- Secciones ---------------------------------------------------------- */
+
+.plan-seccion {
+  margin-top: 4mm;
+  break-inside: avoid;
+}
+
+.plan-seccion-titulo {
+  font-size: 7.4pt;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--plan-marca);
+  margin-bottom: 1.5mm;
+}
+
+.plan-columnas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3mm;
+  align-items: start;
+}
+
+.plan-columnas-2 {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 3mm;
+  align-items: start;
+}
+
+.plan-caja {
+  border: 1pt solid var(--plan-linea);
+  border-radius: 2mm;
+  padding: 2.5mm 3mm;
+  break-inside: avoid;
+}
+
+.plan-caja > .plan-seccion-titulo {
+  margin-bottom: 1mm;
+}
+
+/* Listas: viñeta chica dibujada aparte, para que los ítems de varias líneas
+   queden alineados bajo el texto y no bajo el punto. */
+.plan-lista {
+  margin: 0;
+  padding-left: 3.5mm;
+  list-style: none;
+}
+
+.plan-lista li {
+  position: relative;
+  margin-top: 0.8mm;
+}
+
+.plan-lista li:first-child {
+  margin-top: 0;
+}
+
+.plan-lista li::before {
+  content: "";
+  position: absolute;
+  left: -3mm;
+  top: 0.42em;
+  width: 1.1mm;
+  height: 1.1mm;
+  border-radius: 50%;
+  background: var(--plan-marca);
+}
+
+.plan-vacio {
+  color: #9aa1ae;
+  font-style: italic;
+}
+
+/* --- Tabla de la secuencia ---------------------------------------------- */
+
+.plan-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.plan-tabla th,
+.plan-tabla td {
+  border: 1pt solid var(--plan-linea);
+  padding: 2mm 2.5mm;
+  vertical-align: top;
+  text-align: left;
+}
+
+.plan-tabla thead th {
+  background: var(--plan-fondo-suave);
+  font-size: 6.8pt;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--plan-suave);
+}
+
+/* Si la secuencia pasa a la segunda hoja, el encabezado se repite solo. */
+.plan-tabla thead {
+  display: table-header-group;
+}
+
+.plan-tabla tr {
+  break-inside: avoid;
+}
+
+/* Franja que abre cada parte de la clase. */
+.plan-parte td {
+  background: var(--plan-marca-fondo);
+  padding: 1.5mm 2.5mm;
+}
+
+.plan-parte-nombre {
+  font-size: 8.6pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--plan-marca);
+}
+
+.plan-parte-bloque {
+  font-size: 8pt;
+  font-weight: 500;
+  color: var(--plan-suave);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.plan-actividad-nombre {
+  font-weight: 700;
+  color: var(--plan-tinta);
+}
+
+/* El número de orden dentro de la parte, en gris, para no competir con el
+   nombre de la actividad. */
+.plan-orden {
+  color: var(--plan-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-actividad-detalle {
+  margin-top: 0.8mm;
+}
+
+.plan-duracion {
+  text-align: center;
+  font-weight: 700;
+  color: var(--plan-tinta);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.plan-tabla tfoot td {
+  background: var(--plan-fondo-suave);
+  font-weight: 700;
+  color: var(--plan-tinta);
+}
+
+.plan-tabla tfoot .plan-total-etiqueta {
+  text-align: right;
+  font-size: 7.4pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--plan-suave);
+}
+
+.plan-recursos {
+  overflow-wrap: anywhere;
+}
+
+/* --- Renglones para completar a mano y pie ------------------------------ */
+
+.plan-renglones {
+  margin-top: 1mm;
+  /* Renglones dibujados con el fondo: siempre caen a la misma altura, sin
+     tener que emitir un elemento por línea. */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 6.9mm,
+    var(--plan-linea-suave) 6.9mm,
+    var(--plan-linea-suave) calc(6.9mm + 0.4pt)
+  );
+  height: 28mm;
+}
+
+.plan-pie {
+  display: flex;
+  justify-content: space-between;
+  gap: 6mm;
+  margin-top: 5mm;
+  padding-top: 2mm;
+  border-top: 1pt solid var(--plan-linea-suave);
+  font-size: 7.4pt;
+  color: var(--plan-suave);
+}
+
+/* --- Barra de acciones (sólo pantalla) ---------------------------------- */
+
+.plan-lienzo {
+  background: #e9ebf2;
+  padding: 1.5rem 1rem 3rem;
+  min-height: 100vh;
+}
+
+.plan-barra {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #111827;
+  color: #e5e7eb;
+}
+
+.plan-barra p {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.plan-barra-acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.plan-boton,
+.plan-boton-suave {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 0.55rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.plan-boton {
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.plan-boton:hover {
+  background: #4338ca;
+}
+
+.plan-boton-suave {
+  background: transparent;
+  border-color: #3f4655;
+  color: #e5e7eb;
+}
+
+.plan-boton-suave:hover {
+  background: #1f2534;
+}
+
+/* Celular: la hoja a tamaño real no entra, se adapta al ancho disponible. */
+@media (max-width: 230mm) {
+  .plan-hoja {
+    width: 100%;
+    min-height: 0;
+    padding: 6mm 5mm;
+  }
+
+  .plan-ficha {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Con dos columnas, cualquier casillero ancho ocupa el renglón entero: un
+     `span 3` crearía una tercera columna que se sale de la hoja. */
+  .plan-dato-2,
+  .plan-dato-3 {
+    grid-column: span 2;
+  }
+
+  .plan-columnas,
+  .plan-columnas-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Impresión ---------------------------------------------------------- */
+
+@page {
+  size: A4 portrait;
+  margin: 12mm 11mm;
+}
+
+@media print {
+  /* El navegador ya pone el margen de la página: la hoja vuelve a ser una caja
+     común, sin sombra, sin ancho fijo y sin el lienzo gris de la vista previa. */
+  .plan-lienzo {
+    background: #ffffff;
+    padding: 0;
+    min-height: 0;
+  }
+
+  .plan-hoja {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .plan-barra,
+  .no-imprimir {
+    display: none !important;
+  }
+
+  /* Los fondos de las franjas y los encabezados son parte de la lectura del
+     documento, no decoración: se imprimen. */
+  .plan {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -28,8 +28,9 @@ export default async function UnidadDidacticaPage({
   const docente = await requerirDocente();
   await marcarClasesDictadas(docente.id);
 
-  const unidad = await db.unidadDidactica.findUnique({
-    where: { id: unidadId },
+  // Acotada al docente y al curso de la URL: una unidad ajena da 404.
+  const unidad = await db.unidadDidactica.findFirst({
+    where: { id: unidadId, planificacion: { cursoId, docenteId: docente.id } },
     include: {
       planificacion: { include: { curso: true } },
       clases: {
@@ -105,7 +106,7 @@ export default async function UnidadDidacticaPage({
         </Disclosure>
       </PageHeader>
 
-      <section className="grid grid-cols-3 gap-3">
+      <section className="hidden sm:grid sm:grid-cols-3 gap-3 ">
         <StatTile icono={CalendarRange} valor={clases.length} etiqueta="Clases" tono="brand" />
         <StatTile icono={CheckCircle2} valor={dictadas} etiqueta="Dictadas" tono="esmeralda" />
         <StatTile

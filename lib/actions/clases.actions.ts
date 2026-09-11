@@ -6,7 +6,8 @@ import { db } from "@/lib/db";
 import type { EstadoClase, MotivoCancelacion } from "@prisma/client";
 import { actividadSchema, claseSchema, type ClaseInput } from "@/lib/schemas/clase.schema";
 import { aFecha, aTextoONull } from "@/lib/schemas/common";
-import { EJE_OTRO } from "@/lib/types";
+import { separarMateriales, type JuegoNuevoInput } from "@/lib/schemas/juego.schema";
+import { EJE_OTRO, JUEGO_NUEVO } from "@/lib/types";
 import {
   requerirDocente,
   verificarPropietarioUnidadDidactica,
@@ -206,6 +207,41 @@ export async function reprogramarClase(claseDiariaId: string, cursoId: string, n
 const MENSAJE_ORDEN_OCUPADO = "Ya hay otra actividad con ese orden.";
 
 /**
+ * Traduce el juego que eligió la docente en el id que guarda la actividad.
+ *
+ * Con el centinela `JUEGO_NUEVO` el juego se carga en el momento: siempre se
+ * crea un `Juego` (la actividad necesita un id al que apuntar), y la tilde
+ * "guardar en el banco" sólo decide si queda visible para el resto de las
+ * clases o si vive únicamente dentro de esta actividad.
+ */
+async function resolverJuegoId(
+  tx: Pick<typeof db, "juego">,
+  docenteId: string,
+  juegoId: string,
+  juegoNuevo: JuegoNuevoInput | undefined
+) {
+  if (juegoId !== JUEGO_NUEVO) return { juegoId: juegoId || null, guardadoEnBanco: false };
+  // El `refine` de `actividadSchema` garantiza que acá hay nombre.
+  if (!juegoNuevo?.nombre) return { juegoId: null, guardadoEnBanco: false };
+
+  const juego = await tx.juego.create({
+    data: {
+      nombre: juegoNuevo.nombre,
+      descripcion: aTextoONull(juegoNuevo.descripcion),
+      rangoEtario: juegoNuevo.rangoEtario,
+      categoria: juegoNuevo.categoria,
+      estrategia: juegoNuevo.estrategia,
+      materiales: separarMateriales(juegoNuevo.materiales),
+      enBanco: juegoNuevo.guardarEnBanco,
+      autorId: docenteId,
+    },
+    select: { id: true },
+  });
+
+  return { juegoId: juego.id, guardadoEnBanco: juegoNuevo.guardarEnBanco };
+}
+
+/**
  * El orden ubica la actividad en la secuencia de la clase: dos no pueden
  * compartirlo. Necesita la base de datos, así que se valida acá y no en Zod.
  */
@@ -239,13 +275,17 @@ export async function agregarActividad(
   const validado = validarPayload(actividadSchema, input);
   if (!validado.ok) return validado;
 
-  const { juegoId, duracionMinutos, tipoBloque, orden } = validado.data;
+  const { juegoId, juegoNuevo, duracionMinutos, tipoBloque, orden } = validado.data;
 
   if (orden !== undefined && (await ordenOcupado(claseDiariaId, orden))) {
     return fallo(MENSAJE_ORDEN_OCUPADO, { orden: MENSAJE_ORDEN_OCUPADO });
   }
 
-  await db.$transaction(async (tx) => {
+  // El juego nuevo se crea dentro de la misma transacción que la actividad: si
+  // falla el alta de la actividad no queda un juego suelto en el banco.
+  const { guardadoEnBanco } = await db.$transaction(async (tx) => {
+    const resuelto = await resolverJuegoId(tx, docente.id, juegoId, juegoNuevo);
+
     let ordenFinal = orden;
     if (!ordenFinal) {
       const ultima = await tx.claseActividad.aggregate({
@@ -258,16 +298,19 @@ export async function agregarActividad(
     await tx.claseActividad.create({
       data: {
         claseDiariaId,
-        juegoId: juegoId || null,
+        juegoId: resuelto.juegoId,
         orden: ordenFinal,
         duracionMinutos,
         tipoBloque,
       },
     });
+
+    return resuelto;
   });
 
   revalidatePath(`/cursos/${cursoId}/unidades/${unidadDidacticaId}`);
   revalidatePath(`/cursos/${cursoId}/clase/${claseDiariaId}`);
+  if (guardadoEnBanco) revalidatePath("/juegos");
   return exito();
 }
 
@@ -288,25 +331,33 @@ export async function actualizarActividad(
   const validado = validarPayload(actividadSchema, input);
   if (!validado.ok) return validado;
 
-  const { juegoId, duracionMinutos, tipoBloque, orden, duracionRealMinutos } = validado.data;
+  const { juegoId, juegoNuevo, duracionMinutos, tipoBloque, orden, duracionRealMinutos } =
+    validado.data;
 
   if (orden !== undefined && (await ordenOcupado(claseDiariaId, orden, actividadId))) {
     return fallo(MENSAJE_ORDEN_OCUPADO, { orden: MENSAJE_ORDEN_OCUPADO });
   }
 
-  await db.claseActividad.update({
-    where: { id: actividadId },
-    data: {
-      juegoId: juegoId || null,
-      duracionMinutos,
-      tipoBloque,
-      ...(orden !== undefined ? { orden } : {}),
-      // Si el formulario no trae duración real, se conserva la que ya estaba.
-      ...(duracionRealMinutos !== undefined ? { duracionRealMinutos } : {}),
-    },
+  const { guardadoEnBanco } = await db.$transaction(async (tx) => {
+    const resuelto = await resolverJuegoId(tx, docente.id, juegoId, juegoNuevo);
+
+    await tx.claseActividad.update({
+      where: { id: actividadId },
+      data: {
+        juegoId: resuelto.juegoId,
+        duracionMinutos,
+        tipoBloque,
+        ...(orden !== undefined ? { orden } : {}),
+        // Si el formulario no trae duración real, se conserva la que ya estaba.
+        ...(duracionRealMinutos !== undefined ? { duracionRealMinutos } : {}),
+      },
+    });
+
+    return resuelto;
   });
 
   revalidatePath(`/cursos/${cursoId}/clase/${claseDiariaId}`);
+  if (guardadoEnBanco) revalidatePath("/juegos");
   return exito();
 }
 

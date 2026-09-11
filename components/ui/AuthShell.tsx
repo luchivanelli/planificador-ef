@@ -1,5 +1,6 @@
 import { CalendarCheck, ClipboardList, Gamepad2, Volleyball } from "lucide-react";
 import type { ReactNode } from "react";
+import BotonTema from "@/components/tema/BotonTema";
 
 const VENTAJAS = [
   { icono: CalendarCheck, texto: "Planificación anual, unidades y clases en un solo lugar." },
@@ -24,7 +25,7 @@ export default function AuthShell({
 }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <aside className="relative hidden overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 p-10 text-white lg:flex lg:flex-col lg:justify-between">
+      <aside className="relative hidden overflow-hidden bg-gradient-to-br from-accion via-accion to-accion-fuerte p-10 text-white lg:flex lg:flex-col lg:justify-between">
         {/* Círculos difusos: dan profundidad sin cargar el panel de imágenes. */}
         <div
           aria-hidden="true"
@@ -63,10 +64,16 @@ export default function AuthShell({
         </p>
       </aside>
 
-      <main className="flex items-center justify-center px-4 py-10 sm:px-8">
+      <main className="relative flex items-center justify-center px-4 py-10 sm:px-8">
+        {/* También acá: quien entra de noche no tendría cómo cambiarlo hasta
+            después de iniciar sesión. */}
+        <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
+          <BotonTema />
+        </div>
+
         <div className="w-full max-w-sm">
           <div className="mb-6 text-center lg:text-left">
-            <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-[0_12px_24px_-12px_rgba(79,70,229,0.9)] lg:hidden">
+            <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-accion to-accion-fuerte text-white shadow-[0_12px_24px_-12px_rgba(79,70,229,0.9)] lg:hidden">
               <Volleyball className="h-6 w-6" />
             </span>
             <h1 className="page-title">{titulo}</h1>

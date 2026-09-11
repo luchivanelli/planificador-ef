@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { db } from "@/lib/db";
+import { requerirDocente } from "@/lib/auth";
 import AddAlumnoClient from "@/components/alumno/AddAlumnoClient";
 import AlumnosSearch from "@/components/alumno/AlumnosSearch";
 import DiagnosticoGrupalForm from "@/components/curso/DiagnosticoGrupalForm";
@@ -37,14 +38,19 @@ export default async function CursoPage({
   const { cursoId } = await params;
   const { updatedPlanificacion } = await searchParams;
 
-  const curso = await db.curso.findUnique({
-    where: { id: cursoId },
+  // Antes de tocar la base: sin sesión no se llega a consultar nada, así los
+  // datos del curso no viajan en la respuesta que redirige al login.
+  const docente = await requerirDocente();
+
+  // Acotado al docente: un curso ajeno tiene que dar 404, no mostrarse.
+  const curso = await db.curso.findFirst({
+    where: { id: cursoId, docenteId: docente.id },
     include: { alumnos: { include: { alumno: true } }, institucion: true },
   });
   if (!curso) notFound();
 
   const planificaciones = await db.planificacion.findMany({
-    where: { cursoId },
+    where: { cursoId, docenteId: docente.id },
     // Cada unidad muestra cuántas clases tiene cargadas.
     include: { unidades: { include: { _count: { select: { clases: true } } } } },
     orderBy: { anio: "desc" },
@@ -100,7 +106,7 @@ export default async function CursoPage({
         </Disclosure>
       </PageHeader>
 
-      <section className="grid grid-cols-3 gap-3">
+      <section className="hidden sm:grid sm:grid-cols-3 gap-3">
         <StatTile icono={Users} valor={alumnos.length} etiqueta="Alumnos" tono="esmeralda" />
         <StatTile icono={Layers} valor={totalUnidades} etiqueta="Unidades" tono="brand" />
         <StatTile icono={CalendarRange} valor={totalClases} etiqueta="Clases" tono="cielo" />
@@ -196,7 +202,7 @@ export default async function CursoPage({
         icono={Users}
         titulo="Alumnos"
         subtitulo="Buscá, agregá y gestioná los alumnos de este curso."
-        accion={<span className="pill pill-brand">{alumnos.length}</span>}
+        
       >
         <AlumnosSearch alumnos={alumnos} cursoId={cursoId} />
         <AddAlumnoClient cursoId={cursoId} />

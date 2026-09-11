@@ -6,6 +6,7 @@ import {
   ChartNoAxesCombined,
   ClipboardCheck,
   Clock,
+  FileDown,
   ListChecks,
   Pencil,
   PlusCircle,
@@ -40,8 +41,12 @@ export default async function ClaseEnCursoPage({
   const docente = await requerirDocente();
   await marcarClasesDictadas(docente.id);
 
-  const clase = await db.claseDiaria.findUnique({
-    where: { id: claseId },
+  // Acotada al docente y al curso de la URL: una clase ajena da 404.
+  const clase = await db.claseDiaria.findFirst({
+    where: {
+      id: claseId,
+      unidadDidactica: { planificacion: { cursoId, docenteId: docente.id } },
+    },
     include: {
       unidadDidactica: {
         include: {
@@ -63,6 +68,9 @@ export default async function ClaseEnCursoPage({
   // El banco entero viaja a la página: el buscador de juegos filtra en memoria,
   // así responde sin ida y vuelta al servidor mientras la docente escribe.
   const juegos = await db.juego.findMany({
+    // Además del banco, los juegos cargados dentro de esta clase: sin ellos, al
+    // editar una actividad el buscador no encontraría su juego y lo borraría.
+    where: { OR: [{ enBanco: true }, { actividades: { some: { claseDiariaId: claseId } } }] },
     select: { id: true, nombre: true, rangoEtario: true, categoria: true, estrategia: true },
     orderBy: { nombre: "asc" },
   });
@@ -113,10 +121,26 @@ export default async function ClaseEnCursoPage({
           </>
         }
         acciones={
-          <Link href={`/cursos/${cursoId}/clase/${claseId}/evaluacion`} className="button-primary">
-            <ChartNoAxesCombined className="h-4 w-4" />
-            Evaluar
-          </Link>
+          <div className="flex gap-3 w-full">
+            {/* En otra pestaña: la vista previa ocupa la pantalla entera y la
+                docente vuelve a la clase sin perder dónde estaba. */}
+            <Link
+              href={`/cursos/${cursoId}/clase/${claseId}/plan`}
+              target="_blank"
+              rel="noopener"
+              className="button-secondary w-full"
+            >
+              <FileDown className="h-4 w-4" />
+              Plan en PDF
+            </Link>
+            <Link
+              href={`/cursos/${cursoId}/clase/${claseId}/evaluacion`}
+              className="button-primary w-full"
+            >
+              <ChartNoAxesCombined className="h-4 w-4" />
+              Evaluar
+            </Link>
+          </div>
         }
       >
         {bloquesDeContenido.length > 0 && (
@@ -163,7 +187,7 @@ export default async function ClaseEnCursoPage({
       <SectionCard
         icono={TimerReset}
         titulo="Secuencia de la clase"
-        subtitulo="Arrastrá para cambiar el orden. Cada bloque tiene su cronómetro."
+        subtitulo="Arrastrá para cambiar el orden de los bloques."
         accion={
           minutosTotales > 0 ? (
             <span className="pill pill-brand">

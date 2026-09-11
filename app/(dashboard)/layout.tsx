@@ -4,19 +4,17 @@ import { getDocenteActual } from "@/lib/auth";
 import { cerrarSesion } from "@/lib/actions/auth.actions";
 import FormSubmit from "@/components/FormSubmit";
 import DashboardNav from "@/components/DashboardNav";
-import Avatar from "@/components/ui/Avatar";
+import BotonTema from "@/components/tema/BotonTema";
 import Logo from "@/components/ui/Logo";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const docente = await getDocenteActual();
   if (!docente) redirect("/login");
 
-  const nombreCompleto = `${docente.nombre} ${docente.apellido}`.trim();
-
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[16.5rem_minmax(0,1fr)]">
       {/* Escritorio: menú lateral fijo. Deja todo el ancho útil al contenido. */}
-      <aside className="sticky top-0 hidden h-screen flex-col border-r border-linea bg-white/70 px-4 py-6 backdrop-blur-xl lg:flex">
+      <aside className="sticky top-0 hidden h-screen flex-col border-r border-linea bg-superficie/70 px-4 py-6 backdrop-blur-xl lg:flex">
         <Logo href="/" conBajada className="px-1" />
 
         <div className="mt-8 flex-1">
@@ -24,9 +22,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <DashboardNav />
         </div>
 
+        <div className="mb-3">
+          <BotonTema variante="fila" />
+        </div>
+
         <div className="rounded-card border border-linea bg-ink-50 p-3">
           <div className="flex items-center gap-2.5">
-            {/* <Avatar nombre={nombreCompleto} tamanio="sm" /> */}
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-ink-900">Prof. {docente.nombre}</p>
               <p className="truncate text-xs text-ink-500">{docente.email}</p>
@@ -43,11 +44,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <div className="flex min-h-screen flex-col">
         {/* Celular y tablet: barra superior compacta. */}
-        <header className="sticky top-0 z-40 border-b border-linea bg-white/85 backdrop-blur-xl lg:hidden">
+        <header className="sticky top-0 z-40 border-b border-linea bg-superficie/85 backdrop-blur-xl lg:hidden">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
             <Logo href="/" />
             <div className="flex items-center gap-2">
-              {/* <Avatar nombre={nombreCompleto} tamanio="sm" /> */}
+              <BotonTema />
               <form action={cerrarSesion}>
                 <FormSubmit
                   title="Cerrar sesión"
@@ -71,7 +72,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </div>
 
       {/* Celular: navegación abajo, al alcance del pulgar. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-linea bg-white/95 backdrop-blur-xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-linea bg-superficie/95 backdrop-blur-xl lg:hidden">
         <DashboardNav variante="barra" />
       </div>
     </div>

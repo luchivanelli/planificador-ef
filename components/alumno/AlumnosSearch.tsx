@@ -89,7 +89,7 @@ export default function AlumnosSearch({ alumnos, cursoId }: { alumnos: Alumno[];
           }
         />
       ) : (
-        <ul className="divide-y divide-linea overflow-hidden rounded-control border border-linea">
+        <ul className="divide-y divide-linea overflow-hidden rounded-control border border-linea overflow-y-auto max-h-[300px]">
           {filtered.map((a) => {
             const editando = selectedAlumnoId === a.id;
             const observando = selectedObservacionId === a.id;
@@ -98,7 +98,7 @@ export default function AlumnosSearch({ alumnos, cursoId }: { alumnos: Alumno[];
               <li
                 key={a.id}
                 className={`flex items-center gap-3 px-3 py-2.5 transition ${
-                  editando || observando ? "bg-brand-50/60" : "bg-white hover:bg-ink-50"
+                  editando || observando ? "bg-brand-50/60" : "bg-superficie hover:bg-ink-50"
                 }`}
               >
                 <Avatar nombre={`${a.nombre} ${a.apellido}`} tamanio="sm" />
@@ -121,7 +121,7 @@ export default function AlumnosSearch({ alumnos, cursoId }: { alumnos: Alumno[];
                     className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
                       editando
                         ? "border-brand-300 bg-brand-100 text-brand-700"
-                        : "border-ink-200 bg-white text-ink-500 hover:border-brand-300 hover:text-brand-600"
+                        : "border-ink-200 bg-superficie text-ink-500 hover:border-brand-300 hover:text-brand-600"
                     }`}
                   >
                     <Pencil className="h-4 w-4" />
@@ -136,7 +136,7 @@ export default function AlumnosSearch({ alumnos, cursoId }: { alumnos: Alumno[];
                     className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
                       observando
                         ? "border-brand-300 bg-brand-100 text-brand-700"
-                        : "border-ink-200 bg-white text-ink-500 hover:border-brand-300 hover:text-brand-600"
+                        : "border-ink-200 bg-superficie text-ink-500 hover:border-brand-300 hover:text-brand-600"
                     }`}
                   >
                     <FileText className="h-4 w-4" />

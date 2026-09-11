@@ -6,7 +6,8 @@ import JuegosLista from "@/components/juego/JuegosLista";
 import { GenericToast } from "@/components/GenericToast";
 import Disclosure from "@/components/ui/Disclosure";
 import PageHeader from "@/components/ui/PageHeader";
-import type { RangoEtario, CategoriaJuego, EstrategiaJuego } from "@prisma/client";
+import { requerirDocente } from "@/lib/auth";
+import { getJuegoFilterValues } from "@/lib/juego-filters";
 import { RANGOS, CATEGORIAS, ESTRATEGIAS } from "@/lib/types";
 
 export default async function JuegosPage({
@@ -14,13 +15,24 @@ export default async function JuegosPage({
 }: {
   searchParams: Promise<{ edad?: string; categoria?: string; estrategia?: string; created?: string }>;
 }) {
-  const { edad, categoria, estrategia, created } = await searchParams;
+  const rawParams = await searchParams;
+  const { created } = rawParams;
+
+  // Los filtros vienen de la URL: se validan contra el enum antes de consultar,
+  // así un valor inventado ignora el filtro en vez de romper la página.
+  const { edad, categoria, estrategia } = getJuegoFilterValues(rawParams);
+
+  // Antes de tocar la base: sin sesión no se llega a consultar nada.
+  await requerirDocente();
 
   const juegos = await db.juego.findMany({
     where: {
-      rangoEtario: edad ? (edad as RangoEtario) : undefined,
-      categoria: categoria ? (categoria as CategoriaJuego) : undefined,
-      estrategia: estrategia ? (estrategia as EstrategiaJuego) : undefined,
+      // Los juegos cargados dentro de una actividad sin guardarlos en el banco
+      // no se listan acá: pertenecen a esa clase y nada más.
+      enBanco: true,
+      rangoEtario: edad,
+      categoria,
+      estrategia,
     },
     orderBy: { nombre: "asc" },
   });

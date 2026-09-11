@@ -77,6 +77,13 @@ export type OpcionEje = { id: string; nombre: string };
 export const EJE_OTRO = "otro";
 
 /**
+ * Valor centinela del buscador de juegos para cargar uno nuevo en el momento,
+ * sin pasar por el banco: no es un id de la base, y la acción lo traduce en un
+ * `Juego` creado junto con la actividad (ver `actividadSchema`).
+ */
+export const JUEGO_NUEVO = "nuevo";
+
+/**
  * Los estados que la docente elige a mano. `reprogramada` queda afuera a
  * propósito: la pone `reprogramarClase`, porque implica crear la clase de
  * reemplazo y no tendría sentido elegirla suelta desde el formulario.

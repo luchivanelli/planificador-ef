@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ChartNoAxesCombined, ChevronDown, Pencil, Plus, Sparkles } from "lucide-react";
 import { db } from "@/lib/db";
+import { requerirDocente } from "@/lib/auth";
 import { aFechaLegible, resumenLista } from "@/lib/schemas/common";
 import RubricaForm from "@/components/RubricaForm";
 import EditarRubricaForm from "@/components/EditarRubricaForm";
@@ -18,8 +19,13 @@ export default async function EvaluacionPage({
 }) {
   const { cursoId, claseId } = await params;
 
-  const curso = await db.curso.findUnique({
-    where: { id: cursoId },
+  // Antes de tocar la base: sin sesión no se llega a consultar nada, así los
+  // alumnos no viajan en la respuesta que redirige al login.
+  const docente = await requerirDocente();
+
+  // Acotado al docente: un curso ajeno tiene que dar 404, no mostrarse.
+  const curso = await db.curso.findFirst({
+    where: { id: cursoId, docenteId: docente.id },
     include: { alumnos: { include: { alumno: true } } },
   });
   if (!curso) notFound();

@@ -24,7 +24,9 @@ const ESTILOS_ACTIVOS: Record<Estado, string> = {
   presente: "border-emerald-500 bg-emerald-500 text-white",
   ausente: "border-rose-500 bg-rose-500 text-white",
   tarde: "border-amber-500 bg-amber-500 text-white",
-  SAF: "border-ink-500 bg-ink-500 text-white",
+  // `text-ink-50` y no `text-white`: en oscuro `ink-500` es un gris claro y el
+  // blanco encima dejaría de leerse.
+  SAF: "border-ink-500 bg-ink-500 text-ink-50",
 };
 
 const ETIQUETAS: Record<Estado, string> = {
@@ -120,7 +122,7 @@ export default function ListaAsistencia({
         </div>
       </div>
 
-      <ul className="space-y-2">
+      <ul className="space-y-2 overflow-y-auto max-h-[300px]">
         {ordenados.map((alumno) => {
           const estado = estados[alumno.id];
 
@@ -128,7 +130,7 @@ export default function ListaAsistencia({
             <li
               key={alumno.id}
               className={`flex flex-wrap items-center justify-between gap-2 rounded-control border p-2 pl-3 transition ${
-                estado ? "border-linea bg-white" : "border-dashed border-ink-300 bg-ink-50/60"
+                estado ? "border-linea bg-superficie" : "border-dashed border-ink-300 bg-ink-50/60"
               }`}
             >
               <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-800">
@@ -149,7 +151,7 @@ export default function ListaAsistencia({
                       className={`flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-xs font-bold transition ${
                         activo
                           ? ESTILOS_ACTIVOS[opcion]
-                          : "border-ink-200 bg-white text-ink-400 hover:border-brand-300 hover:text-brand-600"
+                          : "border-ink-200 bg-superficie text-ink-400 hover:border-brand-300 hover:text-brand-600"
                       }`}
                     >
                       <span className="sm:hidden">{ABREVIATURAS[opcion]}</span>

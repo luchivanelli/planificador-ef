@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* El tema lo elige la persona, no el sistema operativo: la variante "dark:"
+   mira la clase que el botón de tema pone en <html>, no "prefers-color-scheme". */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ==========================================================================
    TOKENS DE DISEÑO
    Se exponen a Tailwind con `@theme`, así se pueden usar como utilidades
@@ -38,6 +42,23 @@
   --color-linea: #e4e9f2;
   --color-lienzo: #f5f7fb;
 
+  /* Fondo de tarjetas, inputs y todo lo que "flota" sobre el lienzo.
+     En claro es blanco; en oscuro, un azul muy oscuro (ver bloque `.dark`). */
+  --color-superficie: #ffffff;
+
+  /* Acción primaria. A diferencia de `brand-600`, estos tres NO se invierten
+     en modo oscuro: siempre llevan texto blanco encima, así que tienen que
+     quedar oscuros en los dos temas. */
+  --color-accion: #4f46e5;
+  --color-accion-hover: #4338ca;
+  --color-accion-fuerte: #3730a3;
+
+  /* Acción destructiva (botón de eliminar). */
+  --color-peligro-fondo: #fff1f2;
+  --color-peligro-fondo-hover: #ffe4e6;
+  --color-peligro-borde: #fecdd3;
+  --color-peligro-texto: #be123c;
+
   --radius-card: 1rem;
   --radius-control: 0.625rem;
 
@@ -57,6 +78,136 @@
   --foreground: #0b1220;
   --primary: #4f46e5;
   --primary-soft: #eef2ff;
+}
+
+/* ==========================================================================
+   MODO OSCURO
+   La clase ".dark" la pone el botón de tema sobre <html>. Acá se redefinen los
+   MISMOS tokens del bloque "@theme": como Tailwind compila "text-ink-900" a
+   "color: var(--color-ink-900)", alcanza con dar vuelta la escala para que
+   todas las pantallas cambien sin tocar un solo className.
+
+   Se usa ":root.dark" (y no ".dark" a secas) para ganarle en especificidad al
+   ":root" donde Tailwind declara los valores del tema, sin depender del orden.
+   ========================================================================== */
+
+:root.dark {
+  color-scheme: dark;
+
+  /* Grises dados vuelta: ink-900 pasa a ser el texto claro e ink-50 la
+     superficie sutil. Los pasos del medio (400/500) se mantienen apagados
+     porque son texto secundario en los dos temas. */
+  --color-ink-900: #f1f5f9;
+  --color-ink-800: #e2e8f0;
+  --color-ink-700: #cbd5e1;
+  --color-ink-600: #aab8c9;
+  --color-ink-500: #93a3b8;
+  --color-ink-400: #7d8ca3;
+  --color-ink-300: #48566e;
+  --color-ink-200: #2e3b52;
+  --color-ink-100: #263246;
+  --color-ink-50: #1b2536;
+
+  --color-linea: #2a3650;
+  --color-lienzo: #0b111d;
+  --color-superficie: #151d2c;
+
+  /* Marca: los tonos claros (50-200) se vuelven fondos oscuros teñidos y los
+     oscuros (600-900) se aclaran, porque ahí viven textos e íconos. */
+  --color-brand-50: #1d2140;
+  --color-brand-100: #262b57;
+  --color-brand-200: #363c79;
+  --color-brand-300: #545da8;
+  --color-brand-400: #8e97f8;
+  --color-brand-500: #7c86f7;
+  --color-brand-600: #8e97f8;
+  --color-brand-700: #a8b1fb;
+  --color-brand-800: #c4cafd;
+  --color-brand-900: #dee2fe;
+
+  /* La acción primaria sigue siendo oscura: encima va texto blanco. */
+  --color-accion: #5b56ea;
+  --color-accion-hover: #6f6bf0;
+  --color-accion-fuerte: #4338ca;
+
+  --color-peligro-fondo: #3a1b25;
+  --color-peligro-fondo-hover: #4a2130;
+  --color-peligro-borde: #6d2b3d;
+  --color-peligro-texto: #fda4af;
+
+  /* Colores de estado (rúbricas, avisos, avatares). Mismo criterio que la
+     marca: 50/100/200 son fondos y bordes, 600/700/800 son texto. El 500
+     queda igual porque se usa como punto o barra maciza. */
+  --color-rose-50: #3a1b25;
+  --color-rose-100: #4a2130;
+  --color-rose-200: #6d2b3d;
+  --color-rose-600: #fb7185;
+  --color-rose-700: #fda4af;
+  --color-rose-800: #fecdd3;
+
+  --color-emerald-50: #10291f;
+  --color-emerald-100: #163a2b;
+  --color-emerald-200: #1f5140;
+  --color-emerald-600: #34d399;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-800: #a7f3d0;
+
+  --color-amber-50: #33240b;
+  --color-amber-100: #45300f;
+  --color-amber-200: #66481a;
+  --color-amber-600: #fbbf24;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
+
+  --color-sky-50: #0c2434;
+  --color-sky-100: #123247;
+  --color-sky-200: #1b4763;
+  --color-sky-600: #38bdf8;
+  --color-sky-700: #7dd3fc;
+  --color-sky-800: #bae6fd;
+
+  --color-teal-50: #0c2a29;
+  --color-teal-100: #123a38;
+  --color-teal-200: #1a524f;
+  --color-teal-600: #2dd4bf;
+  --color-teal-700: #5eead4;
+  --color-teal-800: #99f6e4;
+
+  --color-violet-50: #241a40;
+  --color-violet-100: #2f2256;
+  --color-violet-200: #43307c;
+  --color-violet-600: #a78bfa;
+  --color-violet-700: #c4b5fd;
+  --color-violet-800: #ddd6fe;
+
+  /* Sobre fondo oscuro una sombra gris no se ve: se profundiza el negro y el
+     relieve pasa a apoyarse más en los bordes. */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.65);
+  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.5), 0 18px 36px -16px rgba(99, 102, 241, 0.45);
+  --shadow-pop: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+
+  --background: #0b111d;
+  --foreground: #f1f5f9;
+  --primary: #8e97f8;
+  --primary-soft: #1d2140;
+}
+
+/* Los halos del fondo se bajan casi al mínimo: en oscuro cualquier degradado
+   fuerte se lee como una mancha. */
+:root.dark body {
+  background-image:
+    radial-gradient(1200px 600px at 15% -10%, rgba(99, 102, 241, 0.16), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(14, 165, 233, 0.09), transparent 55%);
+}
+
+:root.dark ::selection {
+  background: #3b3f75;
+  color: #e8ebff;
+}
+
+/* La flecha del select va dibujada en el SVG de fondo: hay que repintarla. */
+:root.dark select.input-shell {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2393a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 * {
@@ -90,13 +241,13 @@ body {
 input,
 select,
 textarea {
-  color: #0b1220;
+  color: var(--color-ink-900);
   font-family: inherit;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #94a3b8;
+  color: var(--color-ink-400);
 }
 
 button {
@@ -116,7 +267,7 @@ button {
 @supports (scrollbar-width: thin) {
   * {
     scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-color: var(--color-ink-300) transparent;
   }
 }
 
@@ -146,7 +297,7 @@ button {
   .card {
     border-radius: var(--radius-card);
     border: 1px solid var(--color-linea);
-    background: #ffffff;
+    background: var(--color-superficie);
     box-shadow: var(--shadow-card);
   }
 
@@ -172,7 +323,7 @@ button {
     overflow: hidden;
     border-radius: var(--radius-card);
     border: 1px solid var(--color-linea);
-    background: #ffffff;
+    background: var(--color-superficie);
     box-shadow: var(--shadow-card);
   }
 
@@ -188,7 +339,7 @@ button {
   .vacio {
     border-radius: var(--radius-card);
     border: 1px dashed var(--color-ink-300);
-    background: rgba(248, 250, 252, 0.8);
+    background: var(--color-ink-50);
     color: var(--color-ink-500);
     text-align: center;
   }
@@ -202,7 +353,7 @@ button {
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 0.75rem;
-    background: linear-gradient(140deg, var(--color-brand-500), var(--color-brand-700));
+    background: linear-gradient(140deg, var(--color-accion), var(--color-accion-fuerte));
     color: #ffffff;
     box-shadow: 0 6px 16px -8px rgba(79, 70, 229, 0.8);
   }
@@ -263,7 +414,7 @@ button {
     min-height: 2.75rem;
     border-radius: var(--radius-control);
     border: 1px solid var(--color-ink-200);
-    background: #ffffff;
+    background-color: var(--color-superficie);
     padding: 0.6rem 0.75rem;
     font-size: 0.9rem;
     line-height: 1.4;
@@ -283,7 +434,7 @@ button {
 
   .input-shell:disabled,
   .input-shell[readonly] {
-    background: var(--color-ink-50);
+    background-color: var(--color-ink-50);
     color: var(--color-ink-500);
     cursor: not-allowed;
   }
@@ -314,7 +465,7 @@ button {
     gap: 0.6rem;
     border-radius: var(--radius-control);
     border: 1px solid var(--color-ink-200);
-    background: #ffffff;
+    background: var(--color-superficie);
     padding: 0.65rem 0.75rem;
     font-size: 0.9rem;
     line-height: 1.4;
@@ -378,18 +529,18 @@ button {
 
   .button-primary {
     border: 1px solid transparent;
-    background: var(--color-brand-600);
+    background: var(--color-accion);
     color: #ffffff;
     box-shadow: 0 8px 18px -10px rgba(79, 70, 229, 0.9);
   }
 
   .button-primary:hover {
-    background: var(--color-brand-700);
+    background: var(--color-accion-hover);
   }
 
   .button-secondary {
     border: 1px solid var(--color-ink-200);
-    background: #ffffff;
+    background: var(--color-superficie);
     color: var(--color-ink-700);
   }
 
@@ -411,14 +562,14 @@ button {
   }
 
   .button-delete {
-    border: 1px solid #fecdd3;
-    background: #fff1f2;
-    color: #be123c;
+    border: 1px solid var(--color-peligro-borde);
+    background: var(--color-peligro-fondo);
+    color: var(--color-peligro-texto);
   }
 
   .button-delete:hover {
-    border-color: #fda4af;
-    background: #ffe4e6;
+    border-color: var(--color-peligro-texto);
+    background: var(--color-peligro-fondo-hover);
   }
 
   .button-primary:active,
@@ -467,7 +618,7 @@ button {
     gap: 0.3rem;
     border-radius: 9999px;
     border: 1px solid var(--color-ink-200);
-    background: #ffffff;
+    background: var(--color-superficie);
     padding: 0.4rem 0.8rem;
     font-size: 0.8rem;
     font-weight: 600;
@@ -484,13 +635,13 @@ button {
 
   .chip-activo {
     border-color: transparent;
-    background: var(--color-brand-600);
+    background: var(--color-accion);
     color: #ffffff;
     box-shadow: 0 6px 14px -8px rgba(79, 70, 229, 0.9);
   }
 
   .chip-activo:hover {
-    background: var(--color-brand-700);
+    background: var(--color-accion-hover);
     color: #ffffff;
   }
 
@@ -505,7 +656,7 @@ button {
 
   .disclosure[open] {
     border-color: var(--color-brand-200);
-    background: #ffffff;
+    background: var(--color-superficie);
   }
 
   .disclosure > summary {
@@ -549,7 +700,12 @@ button {
 
   .skeleton {
     border-radius: var(--radius-control);
-    background: linear-gradient(90deg, #eef2f7 25%, #e2e8f0 37%, #eef2f7 63%);
+    background: linear-gradient(
+      90deg,
+      var(--color-ink-100) 25%,
+      var(--color-ink-200) 37%,
+      var(--color-ink-100) 63%
+    );
     background-size: 400% 100%;
     animation: skeleton-brillo 1.4s ease infinite;
   }

@@ -318,6 +318,10 @@ model Juego {
   espacioRequerido       EspacioTipo?
   materiales             String[]
   materialesAlternativos String?
+  // Un juego cargado desde una actividad sin tildar "guardarlo en el banco"
+  // queda con `enBanco: false`: sirve para esa clase, pero no aparece ni en el
+  // listado del banco ni en el buscador de juegos.
+  enBanco                Boolean  @default(true)
 
   autor       Docente?         @relation(fields: [autorId], references: [id])
   ejeNap      EjeNap?          @relation(fields: [ejeNapId], references: [id])

@@ -94,7 +94,7 @@ export default function EvaluacionAlumno({
 
   return (
     <div
-      className={`overflow-hidden rounded-control border bg-white ${
+      className={`overflow-hidden rounded-control border bg-superficie ${
         evaluado ? "border-emerald-200" : "border-amber-200"
       }`}
     >
@@ -143,7 +143,7 @@ export default function EvaluacionAlumno({
                       className="peer sr-only"
                     />
                     <span
-                      className={`block rounded-lg border border-ink-200 bg-white py-2 text-center text-sm font-bold text-ink-500 transition peer-focus-visible:ring-2 peer-focus-visible:ring-brand-300 hover:border-brand-300 ${clasePorNivel(nivel)}`}
+                      className={`block rounded-lg border border-ink-200 bg-superficie py-2 text-center text-sm font-bold text-ink-500 transition peer-focus-visible:ring-2 peer-focus-visible:ring-brand-300 hover:border-brand-300 ${clasePorNivel(nivel)}`}
                     >
                       {nivel}
                     </span>

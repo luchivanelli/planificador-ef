@@ -91,7 +91,7 @@ export default function ClasesFiltradas({
         <SearchInput valor={q} onCambio={setQ} placeholder="Buscar clase por tema" />
 
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-          <button type="button" onClick={() => setEstado(null)} className={`chip ${!estado ? "chip-activo" : ""}`}>
+          <button type="button" onClick={() => setEstado(null)} className={`chip whitespace-nowrap ${!estado ? "chip-activo" : ""}`}>
             Todas <span className="opacity-70">{clases.length}</span>
           </button>
           {ESTADOS.map((e) => (
@@ -99,7 +99,7 @@ export default function ClasesFiltradas({
               key={e.value}
               type="button"
               onClick={() => setEstado(e.value)}
-              className={`chip ${estado === e.value ? "chip-activo" : ""}`}
+              className={`chip whitespace-nowrap ${estado === e.value ? "chip-activo" : ""}`}
             >
               {e.label} <span className="opacity-70">{conteos[e.value] ?? 0}</span>
             </button>
@@ -107,7 +107,7 @@ export default function ClasesFiltradas({
         </div>
       </section>
 
-      <section className="space-y-2.5">
+      <section className="space-y-2.5 overflow-y-auto max-h-[400px]">
         {filtradas.map((clase) => (
           <Link
             key={clase.id}

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, PlusCircle } from "lucide-react";
 import type { CategoriaJuego, EstrategiaJuego, RangoEtario } from "@prisma/client";
-import { CATEGORIAS, ESTRATEGIAS, RANGOS } from "@/lib/types";
+import { CATEGORIAS, ESTRATEGIAS, JUEGO_NUEVO, RANGOS } from "@/lib/types";
 import SearchInput from "@/components/ui/SearchInput";
 
 export type JuegoOpcion = {
@@ -15,6 +15,7 @@ export type JuegoOpcion = {
 };
 
 const SIN_JUEGO = "Sin juego específico";
+const JUEGO_NUEVO_LABEL = "Juego nuevo";
 
 function etiquetaDe(juego: JuegoOpcion) {
   const rango = RANGOS.find((r) => r.value === juego.rangoEtario)?.label;
@@ -45,6 +46,7 @@ export default function JuegoPicker({
   const contenedor = useRef<HTMLDivElement | null>(null);
 
   const seleccionado = juegos.find((juego) => juego.id === valor) ?? null;
+  const esJuegoNuevo = valor === JUEGO_NUEVO;
 
   // Se cierra al tocar afuera o con Escape, como cualquier desplegable.
   useEffect(() => {
@@ -92,12 +94,17 @@ export default function JuegoPicker({
       >
         <span className="min-w-0">
           <span
-            className={`block truncate ${seleccionado ? "font-semibold text-ink-900" : "text-ink-400"}`}
+            className={`block truncate ${
+              seleccionado || esJuegoNuevo ? "font-semibold text-ink-900" : "text-ink-400"
+            }`}
           >
-            {seleccionado?.nombre ?? SIN_JUEGO}
+            {seleccionado?.nombre ?? (esJuegoNuevo ? JUEGO_NUEVO_LABEL : SIN_JUEGO)}
           </span>
           {seleccionado && (
             <span className="block truncate text-xs text-ink-500">{etiquetaDe(seleccionado)}</span>
+          )}
+          {esJuegoNuevo && (
+            <span className="block truncate text-xs text-ink-500">Se carga en este formulario</span>
           )}
         </span>
         <ChevronDown
@@ -106,7 +113,7 @@ export default function JuegoPicker({
       </button>
 
       {abierto && (
-        <div className="animar-entrada absolute left-0 right-0 z-30 mt-1 rounded-control border border-linea bg-white p-2.5 shadow-pop">
+        <div className="animar-entrada absolute left-0 right-0 z-30 mt-1 rounded-control border border-linea bg-superficie p-2.5 shadow-pop">
           <SearchInput
             valor={busqueda}
             onCambio={setBusqueda}
@@ -149,7 +156,7 @@ export default function JuegoPicker({
             </select>
           </div>
 
-          <ul className="mt-2 max-h-64 overflow-y-auto">
+          <ul className="mt-2 max-h-[300px] overflow-y-auto">
             <li>
               <button
                 type="button"
@@ -157,7 +164,24 @@ export default function JuegoPicker({
                 className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-ink-500 transition hover:bg-ink-50"
               >
                 {SIN_JUEGO}
-                {!seleccionado && <Check className="h-4 w-4 shrink-0 text-brand-600" />}
+                {!seleccionado && !esJuegoNuevo && (
+                  <Check className="h-4 w-4 shrink-0 text-brand-600" />
+                )}
+              </button>
+            </li>
+            <li className="border-b border-linea pb-1">
+              <button
+                type="button"
+                onClick={() => elegir(JUEGO_NUEVO)}
+                className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-sm font-semibold text-brand-700 transition hover:bg-brand-50 ${
+                  esJuegoNuevo ? "bg-brand-50" : ""
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <PlusCircle className="h-4 w-4 shrink-0" />
+                  {JUEGO_NUEVO_LABEL}
+                </span>
+                {esJuegoNuevo && <Check className="h-4 w-4 shrink-0 text-brand-600" />}
               </button>
             </li>
             {filtrados.map((juego) => (

@@ -1,19 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
+import { IBM_Plex_Sans } from "next/font/google";
 import { SCRIPT_TEMA } from "@/lib/tema";
 import ToasterTema from "@/components/tema/ToasterTema";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
+// La única tipografía de la app. Antes se cargaban también Geist y Geist Mono,
+// pero sus variables no las usaba ninguna regla ni ninguna clase: eran dos
+// familias que el navegador se bajaba en cada primera visita para nada.
 const ibmPlex = IBM_Plex_Sans({
   variable: "--font-ibm-plex",
   subsets: ["latin"],
@@ -46,7 +39,7 @@ export default function RootLayout({
     <html
       lang="es"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${ibmPlex.variable} h-full antialiased`}
+      className={`${ibmPlex.variable} h-full antialiased`}
     >
       <head>
         {/* Antes de cualquier pintado, para que no haya un flash en claro. */}

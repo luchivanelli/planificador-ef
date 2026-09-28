@@ -29,9 +29,15 @@ export function getCursoFilterValues(searchParams: {
   };
 }
 
+/**
+ * El link de un listado de cursos filtrado. `base` existe porque hay más de una
+ * pantalla que lista cursos con los mismos filtros ("Mis cursos" y la
+ * evaluación general), y las dos tienen que armar la URL igual.
+ */
 export function buildCursosHref(
   currentFilters: CursoFilterValues,
   overrides: { nivel?: string | null; turno?: string | null } = {},
+  base = "/cursos",
 ): string {
   const params = new URLSearchParams();
 
@@ -51,5 +57,5 @@ export function buildCursosHref(
   }
 
   const queryString = params.toString();
-  return queryString ? `/cursos?${queryString}` : "/cursos";
+  return queryString ? `${base}?${queryString}` : base;
 }

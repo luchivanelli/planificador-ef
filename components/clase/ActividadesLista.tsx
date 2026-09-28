@@ -7,6 +7,7 @@ import {
   DndContext,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -28,6 +29,10 @@ import { reordenarActividades } from "@/lib/actions/clases.actions";
 /**
  * La secuencia de la clase se arma arrastrando: al soltar se guarda el orden
  * 1..n completo, así nunca hay que pasar por un número intermedio libre.
+ *
+ * En pantallas chicas arrastrar con el dedo un asa de 28 px es incómodo, así
+ * que ahí la tarjeta muestra flechas de subir/bajar que hacen el mismo
+ * movimiento de a un lugar.
  */
 export default function ActividadesLista({
   claseId,
@@ -43,7 +48,7 @@ export default function ActividadesLista({
   actividades: ActividadListada[];
 }) {
   const router = useRouter();
-  const [, iniciarGuardado] = useTransition();
+  const [guardando, iniciarGuardado] = useTransition();
   const [items, setItems] = useState(actividades);
 
   // El orden se mueve en el cliente antes de que responda el servidor, así que
@@ -60,15 +65,15 @@ export default function ActividadesLista({
     // Sin la distancia mínima, un toque para abrir el formulario se
     // interpretaría como el inicio de un arrastre.
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    // El táctil necesita su propio sensor: el arrastre arranca con una
+    // pulsación sostenida, para que deslizar el dedo siga scrolleando la
+    // página en vez de mover la actividad sin querer.
+    useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  function alSoltar({ active, over }: DragEndEvent) {
-    if (!over || active.id === over.id) return;
-
-    const desde = items.findIndex((a) => a.id === active.id);
-    const hasta = items.findIndex((a) => a.id === over.id);
-    if (desde === -1 || hasta === -1) return;
+  function mover(desde: number, hasta: number) {
+    if (desde === hasta || desde < 0 || hasta < 0 || hasta >= items.length) return;
 
     const previos = items;
     const reordenados = arrayMove(items, desde, hasta);
@@ -97,6 +102,15 @@ export default function ActividadesLista({
     });
   }
 
+  function alSoltar({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return;
+
+    mover(
+      items.findIndex((a) => a.id === active.id),
+      items.findIndex((a) => a.id === over.id)
+    );
+  }
+
   if (items.length === 0) {
     return (
       <EmptyState
@@ -120,11 +134,17 @@ export default function ActividadesLista({
             <ActividadItem
               key={actividad.id}
               posicion={indice + 1}
+              total={items.length}
               claseId={claseId}
               cursoId={cursoId}
               unidadDidacticaId={unidadDidacticaId}
               juegos={juegos}
               actividad={actividad}
+              // Mientras viaja un orden al servidor no se acepta otro: dos
+              // guardados en paralelo podrían llegar al revés.
+              reordenando={guardando}
+              onSubir={() => mover(indice, indice - 1)}
+              onBajar={() => mover(indice, indice + 1)}
             />
           ))}
         </div>

@@ -1,5 +1,6 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ActividadDelPlan, PlanDeClase } from "@/lib/clases/plan-clase";
+import { FUENTE, FUENTE_CURSIVA, FUENTE_NEGRITA } from "@/lib/pdf/tipografia";
 
 /**
  * El plan de clase como PDF de verdad: se arma en el servidor y el navegador lo
@@ -40,7 +41,7 @@ const s = StyleSheet.create({
     fontSize: 8.5,
     lineHeight: 1.45,
     color: C.texto,
-    fontFamily: "Helvetica",
+    fontFamily: FUENTE,
   },
 
   // --- Encabezado ---
@@ -52,10 +53,10 @@ const s = StyleSheet.create({
     borderBottomColor: C.marca,
     paddingBottom: 8,
   },
-  titulo: { fontSize: 17, fontFamily: "Helvetica-Bold", color: C.tinta, paddingBottom: 4 },
+  titulo: { fontSize: 17, fontFamily: FUENTE_NEGRITA, color: C.tinta, paddingBottom: 4 },
   bajada: { fontSize: 8.5, color: C.suave, marginTop: 3 },
   institucion: { maxWidth: 200, textAlign: "right" },
-  institucionNombre: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: C.tinta },
+  institucionNombre: { fontSize: 9.5, fontFamily: FUENTE_NEGRITA, color: C.tinta },
   institucionDato: { fontSize: 7.5, color: C.suave },
 
   aviso: {
@@ -68,7 +69,7 @@ const s = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
     fontSize: 8.5,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: FUENTE_NEGRITA,
     color: "#b91c1c",
   },
 
@@ -81,14 +82,14 @@ const s = StyleSheet.create({
     borderRightWidth: 0.75,
     borderRightColor: C.lineaSuave,
   },
-  etiqueta: { fontSize: 5.8, fontFamily: "Helvetica-Bold", color: C.suave, letterSpacing: 0.7 },
-  valor: { fontSize: 8.5, fontFamily: "Helvetica-Bold", color: C.tinta, marginTop: 1 },
+  etiqueta: { fontSize: 5.8, fontFamily: FUENTE_NEGRITA, color: C.suave, letterSpacing: 0.7 },
+  valor: { fontSize: 8.5, fontFamily: FUENTE_NEGRITA, color: C.tinta, marginTop: 1 },
 
   // --- Secciones ---
   seccion: { marginTop: 11 },
   seccionTitulo: {
     fontSize: 6.6,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: FUENTE_NEGRITA,
     color: C.marca,
     letterSpacing: 0.8,
     marginBottom: 4,
@@ -97,16 +98,16 @@ const s = StyleSheet.create({
   caja: { flex: 1, borderWidth: 1, borderColor: C.linea, paddingVertical: 6, paddingHorizontal: 8 },
 
   item: { flexDirection: "row", marginTop: 2 },
-  vineta: { width: 8, color: C.marca, fontFamily: "Helvetica-Bold" },
+  vineta: { width: 8, color: C.marca, fontFamily: FUENTE_NEGRITA },
   itemTexto: { flex: 1 },
-  vacio: { color: C.vacio, fontFamily: "Helvetica-Oblique" },
+  vacio: { color: C.vacio, fontFamily: FUENTE_CURSIVA },
 
   // --- Tabla de la secuencia ---
   tabla: { borderWidth: 1, borderColor: C.linea },
   filaEncabezado: { flexDirection: "row", backgroundColor: C.fondoSuave },
   celdaEncabezado: {
     fontSize: 6,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: FUENTE_NEGRITA,
     color: C.suave,
     letterSpacing: 0.6,
     paddingVertical: 5,
@@ -115,7 +116,7 @@ const s = StyleSheet.create({
     borderRightColor: C.linea,
   },
   filaParte: { flexDirection: "row", backgroundColor: C.marcaFondo },
-  parteNombre: { fontSize: 8.2, fontFamily: "Helvetica-Bold", color: C.marca, letterSpacing: 0.3 },
+  parteNombre: { fontSize: 8.2, fontFamily: FUENTE_NEGRITA, color: C.marca, letterSpacing: 0.3 },
   parteBloque: { fontSize: 7.5, color: C.suave },
   fila: { flexDirection: "row", borderTopWidth: 0.75, borderTopColor: C.linea },
   celda: {
@@ -124,9 +125,9 @@ const s = StyleSheet.create({
     borderRightWidth: 0.75,
     borderRightColor: C.linea,
   },
-  actividadNombre: { fontFamily: "Helvetica-Bold", color: C.tinta },
+  actividadNombre: { fontFamily: FUENTE_NEGRITA, color: C.tinta },
   orden: { color: C.suave },
-  duracion: { textAlign: "center", fontFamily: "Helvetica-Bold", color: C.tinta },
+  duracion: { textAlign: "center", fontFamily: FUENTE_NEGRITA, color: C.tinta },
   filaTotal: {
     flexDirection: "row",
     backgroundColor: C.fondoSuave,
@@ -135,7 +136,7 @@ const s = StyleSheet.create({
   },
   totalEtiqueta: {
     fontSize: 6.6,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: FUENTE_NEGRITA,
     color: C.suave,
     letterSpacing: 0.6,
     textAlign: "right",

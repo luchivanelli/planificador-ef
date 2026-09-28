@@ -13,14 +13,18 @@ export type CursoResumen = {
   cantidadAlumnos: number;
 };
 
-/** Tarjeta de curso. Se usa igual en el panel de inicio y en "Mis cursos". */
-export default function CursoCard({ curso }: { curso: CursoResumen }) {
+/**
+ * Tarjeta de curso. Se usa igual en el panel de inicio, en "Mis cursos" y en la
+ * evaluación general: en esa última es la misma tarjeta pero llevando a otra
+ * pantalla, y para eso está `href`.
+ */
+export default function CursoCard({ curso, href }: { curso: CursoResumen; href?: string }) {
   const nivel = NIVELES.find((n) => n.value === curso.nivel)?.label;
   const turno = TURNOS.find((t) => t.value === curso.turno)?.label;
 
   return (
     <Link
-      href={`/cursos/${curso.id}`}
+      href={href ?? `/cursos/${curso.id}`}
       className="card card-hover group flex items-center gap-3 p-3.5 sm:p-4"
     >
       <Avatar nombre={curso.nombre} tamanio="lg" />

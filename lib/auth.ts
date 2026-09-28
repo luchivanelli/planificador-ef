@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { randomBytes, createHash } from "crypto";
@@ -58,7 +59,16 @@ export async function destroySession() {
   cookieStore.delete(SESSION_COOKIE);
 }
 
-export async function getDocenteActual() {
+/**
+ * La sesión se lee una sola vez por pedido.
+ *
+ * `cache` de React memoriza por request: el layout del panel, la página que
+ * renderiza adentro y las acciones que corren en ese mismo pedido pedían todas
+ * los mismos datos, y cada una hacía su propio viaje a la base para traer
+ * siempre lo mismo. Ahora la primera los trae y el resto los lee de memoria.
+ * El alcance es el pedido, así que nunca se comparte una sesión con otra.
+ */
+export const getDocenteActual = cache(async function getDocenteActual() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -79,7 +89,7 @@ export async function getDocenteActual() {
   }
 
   return sesion.docente;
-}
+});
 
 export async function requerirDocente() {
   const docente = await getDocenteActual();

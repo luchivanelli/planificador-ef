@@ -34,6 +34,18 @@ export default async function JuegosPage({
       categoria,
       estrategia,
     },
+    // Sólo las columnas que la tarjeta y su formulario de edición usan: el
+    // banco entero viaja a la página, así que cada columna de más se paga en
+    // todos los juegos a la vez.
+    select: {
+      id: true,
+      nombre: true,
+      descripcion: true,
+      rangoEtario: true,
+      categoria: true,
+      estrategia: true,
+      materiales: true,
+    },
     orderBy: { nombre: "asc" },
   });
 

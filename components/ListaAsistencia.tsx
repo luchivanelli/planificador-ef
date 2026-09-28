@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { CheckCircle2, CircleOff, Clock3, Loader2, ShieldAlert } from "lucide-react";
 import { marcarAsistencia } from "@/lib/actions/asistencia.actions";
 import type { EstadoAsistencia } from "@prisma/client";
+import ListaScroll from "@/components/ui/ListaScroll";
 
 // Atado al enum de la base en vez de repetido a mano: así un estado que se
 // agrega o se saca del schema rompe acá en compilación y no en producción.
@@ -122,48 +123,50 @@ export default function ListaAsistencia({
         </div>
       </div>
 
-      <ul className="space-y-2 overflow-y-auto max-h-[300px]">
-        {ordenados.map((alumno) => {
-          const estado = estados[alumno.id];
+      <ListaScroll alto="chica" etiqueta="Asistencia del curso">
+        <ul className="space-y-2">
+          {ordenados.map((alumno) => {
+            const estado = estados[alumno.id];
 
-          return (
-            <li
-              key={alumno.id}
-              className={`flex flex-wrap items-center justify-between gap-2 rounded-control border p-2 pl-3 transition ${
-                estado ? "border-linea bg-superficie" : "border-dashed border-ink-300 bg-ink-50/60"
-              }`}
-            >
-              <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-800">
-                {alumno.apellido}, {alumno.nombre}
-              </span>
+            return (
+              <li
+                key={alumno.id}
+                className={`flex flex-wrap items-center justify-between gap-2 rounded-control border p-2 pl-3 transition ${
+                  estado ? "border-linea bg-superficie" : "border-dashed border-ink-300 bg-ink-50/60"
+                }`}
+              >
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-800">
+                  {alumno.apellido}, {alumno.nombre}
+                </span>
 
-              <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Estado de asistencia">
-                {CICLO.map((opcion) => {
-                  const activo = estado === opcion;
+                <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Estado de asistencia">
+                  {CICLO.map((opcion) => {
+                    const activo = estado === opcion;
 
-                  return (
-                    <button
-                      key={opcion}
-                      type="button"
-                      onClick={() => marcar(alumno.id, opcion)}
-                      aria-pressed={activo}
-                      title={ETIQUETAS[opcion]}
-                      className={`flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-xs font-bold transition ${
-                        activo
-                          ? ESTILOS_ACTIVOS[opcion]
-                          : "border-ink-200 bg-superficie text-ink-400 hover:border-brand-300 hover:text-brand-600"
-                      }`}
-                    >
-                      <span className="sm:hidden">{ABREVIATURAS[opcion]}</span>
-                      <span className="hidden sm:inline">{ETIQUETAS[opcion]}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                    return (
+                      <button
+                        key={opcion}
+                        type="button"
+                        onClick={() => marcar(alumno.id, opcion)}
+                        aria-pressed={activo}
+                        title={ETIQUETAS[opcion]}
+                        className={`flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-xs font-bold transition ${
+                          activo
+                            ? ESTILOS_ACTIVOS[opcion]
+                            : "border-ink-200 bg-superficie text-ink-400 hover:border-brand-300 hover:text-brand-600"
+                        }`}
+                      >
+                        <span className="sm:hidden">{ABREVIATURAS[opcion]}</span>
+                        <span className="hidden sm:inline">{ETIQUETAS[opcion]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </ListaScroll>
     </div>
   );
 }

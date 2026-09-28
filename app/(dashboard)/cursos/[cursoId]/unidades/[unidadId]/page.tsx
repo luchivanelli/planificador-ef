@@ -24,21 +24,29 @@ export default async function UnidadDidacticaPage({
   const { cursoId, unidadId } = await params;
   const { created, updated, deletedClase } = await searchParams;
 
-  // Antes de leer los estados: cierra las clases cuyo horario ya pasó.
   const docente = await requerirDocente();
-  await marcarClasesDictadas(docente.id);
 
-  // Acotada al docente y al curso de la URL: una unidad ajena da 404.
-  const unidad = await db.unidadDidactica.findFirst({
-    where: { id: unidadId, planificacion: { cursoId, docenteId: docente.id } },
-    include: {
-      planificacion: { include: { curso: true } },
-      clases: {
-        orderBy: { fecha: "desc" },
-        include: { _count: { select: { asistencias: true } } },
+  // La barrida que cierra las clases vencidas sale junto con la consulta, en
+  // vez de una atrás de la otra. No cambia lo que se lista: sólo pasa a
+  // `dictada` clases terminadas que ya tienen asistencia, y `presentacionClase`
+  // ya las muestra como "Dictada" por `tieneAsistencia` aunque la barrida
+  // todavía no haya pasado.
+  const [, unidad] = await Promise.all([
+    // Antes de leer los estados: cierra las clases cuyo horario ya pasó.
+    marcarClasesDictadas(docente.id),
+
+    // Acotada al docente y al curso de la URL: una unidad ajena da 404.
+    db.unidadDidactica.findFirst({
+      where: { id: unidadId, planificacion: { cursoId, docenteId: docente.id } },
+      include: {
+        planificacion: { include: { curso: true } },
+        clases: {
+          orderBy: { fecha: "desc" },
+          include: { _count: { select: { asistencias: true } } },
+        },
       },
-    },
-  });
+    }),
+  ]);
   if (!unidad) notFound();
 
   const curso = unidad.planificacion.curso;

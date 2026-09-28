@@ -23,32 +23,33 @@ export default async function EvaluacionPage({
   // alumnos no viajan en la respuesta que redirige al login.
   const docente = await requerirDocente();
 
-  // Acotado al docente: un curso ajeno tiene que dar 404, no mostrarse.
-  const curso = await db.curso.findFirst({
-    where: { id: cursoId, docenteId: docente.id },
-    include: { alumnos: { include: { alumno: true } } },
-  });
-  if (!curso) notFound();
+  // Las dos comprobaciones de pertenencia salen juntas: son independientes
+  // entre sí y encadenarlas era un viaje a la base de más.
+  const [curso, clase] = await Promise.all([
+    // Acotado al docente: un curso ajeno tiene que dar 404, no mostrarse.
+    db.curso.findFirst({
+      where: { id: cursoId, docenteId: docente.id },
+      include: { alumnos: { include: { alumno: true } } },
+    }),
 
-  // La evaluación es por clase, así que se comprueba que la clase cuelgue de
-  // este curso antes de mostrar nada.
-  const clase = await db.claseDiaria.findFirst({
-    where: { id: claseId, unidadDidactica: { planificacion: { cursoId } } },
-    select: { id: true, fecha: true, temaClase: true },
-  });
-  if (!clase) notFound();
+    // La evaluación es por clase, así que se comprueba que la clase cuelgue de
+    // este curso antes de mostrar nada.
+    db.claseDiaria.findFirst({
+      where: { id: claseId, unidadDidactica: { planificacion: { cursoId } } },
+      select: { id: true, fecha: true, temaClase: true },
+    }),
+  ]);
+  if (!curso || !clase) notFound();
 
-  // Cada clase arma sus propias rúbricas: no se heredan de otras clases.
-  const rubricas = await db.rubrica.findMany({
-    where: { claseId },
-    include: { indicadores: true },
-  });
+  // Recién con la clase comprobada se leen las rúbricas y lo ya evaluado; las
+  // dos dependen sólo de la clase, así que también van juntas.
+  const [rubricas, evaluaciones] = await Promise.all([
+    // Cada clase arma sus propias rúbricas: no se heredan de otras clases.
+    db.rubrica.findMany({ where: { claseId }, include: { indicadores: true } }),
+    db.evaluacionAlumno.findMany({ where: { claseId }, include: { detalles: true } }),
+  ]);
 
   const alumnos = curso.alumnos.map((ca) => ca.alumno);
-  const evaluaciones = await db.evaluacionAlumno.findMany({
-    where: { claseId },
-    include: { detalles: true },
-  });
 
   // Hay una evaluación por alumno y rúbrica, así que la clave junta las dos.
   const evalMap = new Map(evaluaciones.map((e) => [`${e.rubricaId}:${e.alumnoId}`, e]));
@@ -64,9 +65,11 @@ export default async function EvaluacionPage({
     return alumnos.filter((alumno) => {
       const evaluacion = evalMap.get(`${rubricaId}:${alumno.id}`);
       if (!evaluacion) return false;
-      return indicadores.every((indicador) =>
-        evaluacion.detalles.some((detalle) => detalle.indicadorId === indicador.id)
-      );
+      // Un conjunto por evaluación en vez de recorrer los detalles una vez por
+      // indicador: con una rúbrica de seis indicadores y treinta alumnos eran
+      // cientos de recorridas para contar un número del encabezado.
+      const puntuados = new Set(evaluacion.detalles.map((detalle) => detalle.indicadorId));
+      return indicadores.every((indicador) => puntuados.has(indicador.id));
     }).length;
   }
 

@@ -42,19 +42,23 @@ export default async function CursoPage({
   // datos del curso no viajan en la respuesta que redirige al login.
   const docente = await requerirDocente();
 
-  // Acotado al docente: un curso ajeno tiene que dar 404, no mostrarse.
-  const curso = await db.curso.findFirst({
-    where: { id: cursoId, docenteId: docente.id },
-    include: { alumnos: { include: { alumno: true } }, institucion: true },
-  });
-  if (!curso) notFound();
+  // Las dos consultas salen juntas: las planificaciones ya vienen acotadas al
+  // docente por su propio `where`, así que no hacía falta esperar al curso.
+  const [curso, planificaciones] = await Promise.all([
+    // Acotado al docente: un curso ajeno tiene que dar 404, no mostrarse.
+    db.curso.findFirst({
+      where: { id: cursoId, docenteId: docente.id },
+      include: { alumnos: { include: { alumno: true } }, institucion: true },
+    }),
 
-  const planificaciones = await db.planificacion.findMany({
-    where: { cursoId, docenteId: docente.id },
-    // Cada unidad muestra cuántas clases tiene cargadas.
-    include: { unidades: { include: { _count: { select: { clases: true } } } } },
-    orderBy: { anio: "desc" },
-  });
+    db.planificacion.findMany({
+      where: { cursoId, docenteId: docente.id },
+      // Cada unidad muestra cuántas clases tiene cargadas.
+      include: { unidades: { include: { _count: { select: { clases: true } } } } },
+      orderBy: { anio: "desc" },
+    }),
+  ]);
+  if (!curso) notFound();
 
   const alumnos = curso.alumnos.map((ca) => ca.alumno);
   const totalUnidades = planificaciones.reduce((total, p) => total + p.unidades.length, 0);

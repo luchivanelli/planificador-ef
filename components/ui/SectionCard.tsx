@@ -13,6 +13,7 @@ export default function SectionCard({
   titulo,
   subtitulo,
   accion,
+  accionBloque = false,
   destacada = false,
   className = "",
   cuerpoClassName = "",
@@ -23,6 +24,14 @@ export default function SectionCard({
   subtitulo?: ReactNode;
   /** Botón o link alineado a la derecha del encabezado. */
   accion?: ReactNode;
+  /**
+   * Apila las acciones a lo ancho en el celular, en vez de dejarlas al lado del
+   * título. Es para los botones de verdad: dos botones compitiendo por el
+   * espacio que les deja el título quedan angostos y difíciles de acertar con
+   * el pulgar. Las acciones que son una píldora informativa no lo usan, porque
+   * una píldora estirada de punta a punta no se lee como una píldora.
+   */
+  accionBloque?: boolean;
   /** Suma la barra de color superior, para la sección principal de la página. */
   destacada?: boolean;
   className?: string;
@@ -48,10 +57,30 @@ export default function SectionCard({
               {subtitulo && <p className="card-subtitle mt-0.5">{subtitulo}</p>}
             </div>
           </div>
-          {accion && <div className="flex shrink-0 items-center gap-2">{accion}</div>}
+          {accion && (
+            // `items-stretch` es lo que hace que cada botón ocupe todo el ancho:
+            // son `inline-flex`, así que sin esto se quedan del tamaño de su
+            // texto aunque el contenedor sea ancho.
+            <div
+              className={
+                accionBloque
+                  ? "flex w-full flex-col items-stretch gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:items-center"
+                  : "flex shrink-0 items-center gap-2"
+              }
+            >
+              {accion}
+            </div>
+          )}
         </header>
       )}
-      <div className={`${tieneEncabezado ? "mt-4 sm:mt-5" : ""} ${cuerpoClassName}`}>{children}</div>
+      {/* Sin cuerpo no se dibuja el contenedor: si no, una tarjeta que es sólo
+          encabezado (título, subtítulo y botones) queda con el margen de arriba
+          del cuerpo colgando como espacio muerto abajo. */}
+      {children !== undefined && children !== null && children !== false && (
+        <div className={`${tieneEncabezado ? "mt-4 sm:mt-5" : ""} ${cuerpoClassName}`}>
+          {children}
+        </div>
+      )}
     </section>
   );
 }

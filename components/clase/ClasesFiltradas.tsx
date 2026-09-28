@@ -7,6 +7,7 @@ import type { EstadoClase } from "@prisma/client";
 import type { PresentacionClase } from "@/lib/clases/estado";
 import ClaseBadge from "@/components/clase/ClaseBadge";
 import EmptyState from "@/components/ui/EmptyState";
+import ListaScroll from "@/components/ui/ListaScroll";
 import SearchInput from "@/components/ui/SearchInput";
 
 export type ClaseListada = {
@@ -107,7 +108,7 @@ export default function ClasesFiltradas({
         </div>
       </section>
 
-      <section className="space-y-2.5 overflow-y-auto max-h-[400px]">
+      <ListaScroll etiqueta="Clases de la unidad" className="space-y-2.5">
         {filtradas.map((clase) => (
           <Link
             key={clase.id}
@@ -136,7 +137,7 @@ export default function ClasesFiltradas({
             descripcion="Probá con otro estado o limpiá la búsqueda."
           />
         )}
-      </section>
+      </ListaScroll>
     </div>
   );
 }

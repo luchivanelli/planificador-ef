@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, GripVertical, Timer } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical, Timer } from "lucide-react";
 import ActividadForm, { type ActividadEditable, type JuegoOpcion } from "@/components/clase/ActividadForm";
 import { TIPOS_BLOQUE } from "@/lib/types";
 
@@ -16,24 +16,38 @@ const COLOR_BLOQUE: Record<string, { barra: string; pill: string }> = {
   vuelta_calma: { barra: "border-l-teal-400", pill: "border-teal-200 bg-teal-50 text-teal-700" },
 };
 
+const BOTON_MOVER =
+  "flex h-7 w-7 items-center justify-center rounded-lg text-ink-300 transition hover:bg-ink-100 hover:text-brand-600 disabled:pointer-events-none disabled:opacity-30";
+
 /**
  * El asa de arrastre queda fuera del `<details>`: si estuviera dentro del
  * `<summary>`, cada intento de mover la actividad abriría el formulario.
+ *
+ * En mobile el asa se reemplaza por flechas de subir/bajar: apuntar con el
+ * dedo a un asa angosta y arrastrarla sin scrollear la página no funciona bien.
  */
 export default function ActividadItem({
   posicion,
+  total,
   claseId,
   cursoId,
   unidadDidacticaId,
   juegos,
   actividad,
+  reordenando,
+  onSubir,
+  onBajar,
 }: {
   posicion: number;
+  total: number;
   claseId: string;
   cursoId: string;
   unidadDidacticaId: string;
   juegos: JuegoOpcion[];
   actividad: ActividadListada;
+  reordenando: boolean;
+  onSubir: () => void;
+  onBajar: () => void;
 }) {
   const [abierto, setAbierto] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -56,12 +70,33 @@ export default function ActividadItem({
       }`}
     >
       <div className="flex items-start gap-1.5 pl-1.5">
+        <div className="mt-2 flex shrink-0 flex-col gap-0.5 sm:hidden">
+          <button
+            type="button"
+            onClick={onSubir}
+            disabled={posicion === 1 || reordenando}
+            aria-label={`Subir ${nombre}`}
+            className={BOTON_MOVER}
+          >
+            <ChevronUp className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onBajar}
+            disabled={posicion === total || reordenando}
+            aria-label={`Bajar ${nombre}`}
+            className={BOTON_MOVER}
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        </div>
+
         <button
           type="button"
           {...attributes}
           {...listeners}
           aria-label={`Reordenar ${nombre}`}
-          className="mt-2.5 cursor-grab touch-none rounded-lg p-1.5 text-ink-300 transition hover:bg-ink-100 hover:text-brand-600 active:cursor-grabbing"
+          className="mt-2.5 hidden cursor-grab touch-none rounded-lg p-1.5 text-ink-300 transition hover:bg-ink-100 hover:text-brand-600 active:cursor-grabbing sm:block"
         >
           <GripVertical className="h-4 w-4" />
         </button>

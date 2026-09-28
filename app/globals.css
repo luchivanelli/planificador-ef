@@ -13,7 +13,7 @@
 
 @theme {
   --font-sans: var(--font-ibm-plex), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-mono: ui-monospace, monospace;
 
   /* Marca: índigo. Es el color de acción (botones, links, foco). */
   --color-brand-50: #eef2ff;

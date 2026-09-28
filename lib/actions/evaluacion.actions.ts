@@ -170,10 +170,22 @@ export async function guardarEvaluacion(
 ): Promise<ResultadoAccion> {
   const docente = await requerirDocente();
 
-  try {
-    await verificarPropietarioCurso(cursoId, docente.id);
-  } catch (error) {
-    return fallo(mensajeDeError(error, "No tenés permiso sobre este curso"));
+  // Se guarda una evaluación por alumno, así que esto se llama tantas veces
+  // como alumnos tenga el curso: las tres comprobaciones salen juntas en vez de
+  // una atrás de la otra. `allSettled` mantiene el orden de los mensajes, que
+  // con `Promise.all` pasaría a depender de cuál consulta falla primero.
+  const [propietario, deEsteCurso, laRubrica] = await Promise.allSettled([
+    verificarPropietarioCurso(cursoId, docente.id),
+    claseDelCurso(claseId, cursoId),
+    // Las rúbricas son de la clase: si es la de esta URL, ya es del docente.
+    db.rubrica.findFirst({
+      where: { id: rubricaId, claseId },
+      include: { indicadores: { select: { id: true } } },
+    }),
+  ]);
+
+  if (propietario.status === "rejected") {
+    return fallo(mensajeDeError(propietario.reason, "No tenés permiso sobre este curso"));
   }
 
   const validado = validarPayload(evaluacionSchema, input);
@@ -181,15 +193,13 @@ export async function guardarEvaluacion(
 
   const { observacionDocente, valores } = validado.data;
 
-  if (!(await claseDelCurso(claseId, cursoId))) {
+  if (deEsteCurso.status === "rejected") throw deEsteCurso.reason;
+  if (!deEsteCurso.value) {
     return fallo("La clase no existe o no pertenece a este curso");
   }
 
-  // Las rúbricas son de la clase: si es la de esta URL, ya es del docente.
-  const rubrica = await db.rubrica.findFirst({
-    where: { id: rubricaId, claseId },
-    include: { indicadores: { select: { id: true } } },
-  });
+  if (laRubrica.status === "rejected") throw laRubrica.reason;
+  const rubrica = laRubrica.value;
   if (!rubrica) {
     return fallo("La rúbrica no existe o no es de esta clase");
   }

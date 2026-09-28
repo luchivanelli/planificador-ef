@@ -34,32 +34,64 @@ export default async function DashboardPage() {
   // acá antes de que el layout alcance a redirigir.
   const docente = await requerirDocente();
 
-  // Antes de leer los estados: cierra las clases que ya terminaron.
-  await marcarClasesDictadas(docente.id);
-
-  const cursos = await db.curso.findMany({
-    where: { docenteId: docente.id },
-    include: { alumnos: true, institucion: true },
-    orderBy: { nombre: "asc" },
-  });
-
   const ahora = new Date();
   const { inicio: hoyInicio, fin: hoyFin } = rangoDelDia(ahora);
 
-  const clasesHoy = await db.claseDiaria.findMany({
-    where: {
-      fecha: { gte: hoyInicio, lt: hoyFin },
-      unidadDidactica: { planificacion: { cursoId: { in: cursos.map((c) => c.id) } } },
-    },
-    include: {
-      unidadDidactica: { include: { planificacion: { include: { curso: true } } } },
-      // Es la señal de que la clase realmente se dio.
-      _count: { select: { asistencias: true } },
-    },
-    orderBy: { fecha: "asc" },
-  });
+  // Las cuatro consultas salen juntas en vez de una atrás de la otra: eran
+  // cuatro viajes a la base encadenados y ahora es uno solo de ida y vuelta.
+  //
+  // La barrida que cierra las clases vencidas puede correr al mismo tiempo que
+  // las lecturas sin cambiar nada de lo que se ve: sólo toca clases terminadas
+  // que ya tienen asistencia cargada, y para ésas `presentacionClase` muestra
+  // "Dictada" de las dos formas (por `estado`, o por `tieneAsistencia` si la
+  // barrida todavía no pasó). Las pendientes son justamente las que no tienen
+  // asistencia, así que la barrida nunca las toca.
+  const [, cursos, clasesHoy, pendientes] = await Promise.all([
+    marcarClasesDictadas(docente.id),
 
-  const pendientes = await clasesPendientesDeAsistencia(docente.id);
+    db.curso.findMany({
+      where: { docenteId: docente.id },
+      select: {
+        id: true,
+        nombre: true,
+        nivel: true,
+        turno: true,
+        institucion: { select: { nombre: true } },
+        // Sólo el id del alumno: alcanza para contarlos y para el total sin
+        // repetidos, y evita traerse la fila entera de cada inscripción.
+        alumnos: { select: { alumnoId: true } },
+      },
+      orderBy: { nombre: "asc" },
+    }),
+
+    db.claseDiaria.findMany({
+      where: {
+        fecha: { gte: hoyInicio, lt: hoyFin },
+        unidadDidactica: { planificacion: { curso: { docenteId: docente.id } } },
+      },
+      select: {
+        id: true,
+        fecha: true,
+        horaInicio: true,
+        horaFin: true,
+        estado: true,
+        temaClase: true,
+        unidadDidactica: {
+          select: {
+            titulo: true,
+            planificacion: {
+              select: { curso: { select: { id: true, nombre: true, nivel: true } } },
+            },
+          },
+        },
+        // Es la señal de que la clase realmente se dio.
+        _count: { select: { asistencias: true } },
+      },
+      orderBy: { fecha: "asc" },
+    }),
+
+    clasesPendientesDeAsistencia(docente.id),
+  ]);
 
   // Un mismo alumno puede estar en varios cursos: se cuenta una sola vez.
   const totalAlumnos = new Set(cursos.flatMap((c) => c.alumnos.map((ca) => ca.alumnoId))).size;

@@ -253,6 +253,10 @@ model ClaseDiaria {
   @@index([unidadDidacticaId])
   // La barrida que cierra las clases vencidas filtra por estado + fecha.
   @@index([estado, fecha])
+  // "Las clases de hoy" del panel y el informe del período filtran por fecha
+  // sola, sin estado: el índice de arriba no les sirve porque `estado` va
+  // primero y un índice compuesto sólo se puede usar desde su primera columna.
+  @@index([fecha])
 }
 
 
@@ -375,6 +379,11 @@ model Asistencia {
   @@unique([cursoId, alumnoId, fecha, claseDiariaId])
   @@index([alumnoId])
   @@index([claseDiariaId])
+  // El informe del período pide la asistencia de un curso entre dos fechas. La
+  // clave única de arriba empieza por `cursoId`, pero tiene `alumnoId` en el
+  // medio: el rango de fechas no la puede aprovechar y termina recorriendo toda
+  // la asistencia del curso.
+  @@index([cursoId, fecha])
 }
 
 enum EstadoAsistencia {

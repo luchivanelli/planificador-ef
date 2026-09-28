@@ -6,6 +6,7 @@ import EditarAlumnoForm from "@/components/alumno/EditarAlumnoForm";
 import ObservacionesAlumnoForm from "@/components/alumno/ObservacionesAlumnoForm";
 import Avatar from "@/components/ui/Avatar";
 import EmptyState from "@/components/ui/EmptyState";
+import ListaScroll from "@/components/ui/ListaScroll";
 import SearchInput from "@/components/ui/SearchInput";
 
 type Alumno = {
@@ -89,63 +90,65 @@ export default function AlumnosSearch({ alumnos, cursoId }: { alumnos: Alumno[];
           }
         />
       ) : (
-        <ul className="divide-y divide-linea overflow-hidden rounded-control border border-linea overflow-y-auto max-h-[300px]">
-          {filtered.map((a) => {
-            const editando = selectedAlumnoId === a.id;
-            const observando = selectedObservacionId === a.id;
+        <ListaScroll alto="chica" etiqueta="Alumnos del curso">
+          <ul className="divide-y divide-linea overflow-hidden rounded-control border border-linea">
+            {filtered.map((a) => {
+              const editando = selectedAlumnoId === a.id;
+              const observando = selectedObservacionId === a.id;
 
-            return (
-              <li
-                key={a.id}
-                className={`flex items-center gap-3 px-3 py-2.5 transition ${
-                  editando || observando ? "bg-brand-50/60" : "bg-superficie hover:bg-ink-50"
-                }`}
-              >
-                <Avatar nombre={`${a.nombre} ${a.apellido}`} tamanio="sm" />
+              return (
+                <li
+                  key={a.id}
+                  className={`flex items-center gap-3 px-3 py-2.5 transition ${
+                    editando || observando ? "bg-brand-50/60" : "bg-superficie hover:bg-ink-50"
+                  }`}
+                >
+                  <Avatar nombre={`${a.nombre} ${a.apellido}`} tamanio="sm" />
 
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-ink-800">
-                    {a.apellido}, {a.nombre}
-                  </p>
-                  {a.observaciones && (
-                    <p className="truncate text-xs text-ink-400">Con observaciones cargadas</p>
-                  )}
-                </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-ink-800">
+                      {a.apellido}, {a.nombre}
+                    </p>
+                    {a.observaciones && (
+                      <p className="truncate text-xs text-ink-400">Con observaciones cargadas</p>
+                    )}
+                  </div>
 
-                <div className="flex shrink-0 items-center gap-1">
-                  <button
-                    type="button"
-                    title="Editar datos del alumno"
-                    aria-label={`Editar datos de ${a.nombre} ${a.apellido}`}
-                    onClick={() => setSelectedAlumnoId((current) => (current === a.id ? null : a.id))}
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
-                      editando
-                        ? "border-brand-300 bg-brand-100 text-brand-700"
-                        : "border-ink-200 bg-superficie text-ink-500 hover:border-brand-300 hover:text-brand-600"
-                    }`}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    title="Seguimiento y observaciones"
-                    aria-label={`Observaciones de ${a.nombre} ${a.apellido}`}
-                    onClick={() =>
-                      setSelectedObservacionId((current) => (current === a.id ? null : a.id))
-                    }
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
-                      observando
-                        ? "border-brand-300 bg-brand-100 text-brand-700"
-                        : "border-ink-200 bg-superficie text-ink-500 hover:border-brand-300 hover:text-brand-600"
-                    }`}
-                  >
-                    <FileText className="h-4 w-4" />
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      title="Editar datos del alumno"
+                      aria-label={`Editar datos de ${a.nombre} ${a.apellido}`}
+                      onClick={() => setSelectedAlumnoId((current) => (current === a.id ? null : a.id))}
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
+                        editando
+                          ? "border-brand-300 bg-brand-100 text-brand-700"
+                          : "border-ink-200 bg-superficie text-ink-500 hover:border-brand-300 hover:text-brand-600"
+                      }`}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      title="Seguimiento y observaciones"
+                      aria-label={`Observaciones de ${a.nombre} ${a.apellido}`}
+                      onClick={() =>
+                        setSelectedObservacionId((current) => (current === a.id ? null : a.id))
+                      }
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
+                        observando
+                          ? "border-brand-300 bg-brand-100 text-brand-700"
+                          : "border-ink-200 bg-superficie text-ink-500 hover:border-brand-300 hover:text-brand-600"
+                      }`}
+                    >
+                      <FileText className="h-4 w-4" />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </ListaScroll>
       )}
     </div>
   );

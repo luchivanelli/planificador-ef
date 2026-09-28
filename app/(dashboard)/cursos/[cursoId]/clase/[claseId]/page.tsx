@@ -37,50 +37,64 @@ export default async function ClaseEnCursoPage({
 }) {
   const { cursoId, claseId } = await params;
 
-  // Antes de leer el estado: cierra las clases cuyo horario ya pasó.
   const docente = await requerirDocente();
-  await marcarClasesDictadas(docente.id);
 
-  // Acotada al docente y al curso de la URL: una clase ajena da 404.
-  const clase = await db.claseDiaria.findFirst({
-    where: {
-      id: claseId,
-      unidadDidactica: { planificacion: { cursoId, docenteId: docente.id } },
-    },
-    include: {
-      unidadDidactica: {
-        include: {
-          planificacion: {
-            include: { curso: { include: { alumnos: { include: { alumno: true } } } } },
+  // Las tres consultas de la clase salen juntas, y con ellas la barrida que
+  // cierra las clases vencidas: antes eran cuatro viajes a la base encadenados.
+  //
+  // Que la barrida corra a la par no cambia lo que se muestra: sólo pasa a
+  // `dictada` clases terminadas que ya tienen asistencia, y para ésas
+  // `presentacionClase` muestra "Dictada" igual, por `tieneAsistencia`.
+  const [, clase, juegos, asistenciaClase] = await Promise.all([
+    // Antes de leer el estado: cierra las clases cuyo horario ya pasó.
+    marcarClasesDictadas(docente.id),
+
+    // Acotada al docente y al curso de la URL: una clase ajena da 404.
+    db.claseDiaria.findFirst({
+      where: {
+        id: claseId,
+        unidadDidactica: { planificacion: { cursoId, docenteId: docente.id } },
+      },
+      include: {
+        unidadDidactica: {
+          include: {
+            planificacion: {
+              include: { curso: { include: { alumnos: { include: { alumno: true } } } } },
+            },
           },
         },
+        actividades: { include: { juego: true }, orderBy: { orden: "asc" } },
       },
-      actividades: { include: { juego: true }, orderBy: { orden: "asc" } },
-    },
-  });
+    }),
+
+    // El banco entero viaja a la página: el buscador de juegos filtra en
+    // memoria, así responde sin ida y vuelta al servidor mientras se escribe.
+    db.juego.findMany({
+      // Además del banco, los juegos cargados dentro de esta clase: sin ellos,
+      // al editar una actividad el buscador no encontraría su juego y lo
+      // borraría.
+      where: { OR: [{ enBanco: true }, { actividades: { some: { claseDiariaId: claseId } } }] },
+      select: { id: true, nombre: true, rangoEtario: true, categoria: true, estrategia: true },
+      orderBy: { nombre: "asc" },
+    }),
+
+    // Sólo el alumno y su estado: es todo lo que necesita la lista.
+    db.asistencia.findMany({
+      where: { claseDiariaId: claseId, cursoId },
+      select: { alumnoId: true, estado: true },
+    }),
+  ]);
   if (!clase) notFound();
 
   const curso = clase.unidadDidactica.planificacion.curso;
   const unidadDidacticaId = clase.unidadDidacticaId;
 
+  // Depende del nivel y el ciclo del curso, así que recién se puede pedir acá.
   const ejes = await ejesDelCurso(curso.nivel, curso.ciclo);
-
-  // El banco entero viaja a la página: el buscador de juegos filtra en memoria,
-  // así responde sin ida y vuelta al servidor mientras la docente escribe.
-  const juegos = await db.juego.findMany({
-    // Además del banco, los juegos cargados dentro de esta clase: sin ellos, al
-    // editar una actividad el buscador no encontraría su juego y lo borraría.
-    where: { OR: [{ enBanco: true }, { actividades: { some: { claseDiariaId: claseId } } }] },
-    select: { id: true, nombre: true, rangoEtario: true, categoria: true, estrategia: true },
-    orderBy: { nombre: "asc" },
-  });
 
   // La fecha se guarda como medianoche UTC: se formatea igual para no correrse un día.
   const fechaISO = aValorFecha(clase.fecha);
 
-  const asistenciaClase = await db.asistencia.findMany({
-    where: { claseDiariaId: claseId, cursoId },
-  });
   const estadosIniciales: Record<string, EstadoAsistencia> = Object.fromEntries(
     asistenciaClase.map((a) => [a.alumnoId, a.estado])
   );

@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Gamepad2, House, BookOpen } from "lucide-react";
+import { Gamepad2, House, BookOpen, GraduationCap } from "lucide-react";
 
 const links = [
   { href: "/", label: "Inicio", icon: House },
   { href: "/juegos", label: "Juegos", icon: Gamepad2 },
   { href: "/cursos", label: "Cursos", icon: BookOpen },
+  { href: "/evaluacion", label: "Evaluación", icon: GraduationCap },
 ];
 
 /**
@@ -24,7 +25,7 @@ export default function DashboardNav({ variante = "lateral" }: { variante?: "lat
     return (
       <nav
         aria-label="Navegación principal"
-        className="grid grid-cols-3 gap-1 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5"
+        className="grid grid-cols-4 gap-1 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5"
       >
         {links.map(({ href, label, icon: Icon }) => {
           const activo = esActivo(href);

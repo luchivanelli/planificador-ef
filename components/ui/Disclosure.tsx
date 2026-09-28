@@ -47,7 +47,12 @@ export default function Disclosure({
             className={`h-4 w-4 shrink-0 ${tono === "accion" ? "text-brand-600" : "text-ink-400"}`}
           />
         )}
-        <span className={tono === "accion" ? "text-brand-700" : undefined}>{titulo}</span>
+        {/* `min-w-0` es lo que habilita el `truncate` de los títulos largos: sin
+            eso el span no puede achicarse por debajo de su contenido (los flex
+            items arrancan con `min-width: auto`) y el texto se desborda. */}
+        <span className={`min-w-0 flex-1 ${tono === "accion" ? "text-brand-700" : ""}`}>
+          {titulo}
+        </span>
         <ChevronDown className="disclosure-chevron h-4 w-4" />
       </summary>
       <div className={`disclosure-cuerpo ${cuerpoClassName}`}>{children}</div>

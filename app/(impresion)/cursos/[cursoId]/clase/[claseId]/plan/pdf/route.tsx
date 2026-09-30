@@ -2,6 +2,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { requerirDocente } from "@/lib/auth";
 import { fechaConDia, planDeClase } from "@/lib/clases/plan-clase";
 import { aFecha, aFechaLegible, diaEnZona } from "@/lib/schemas/common";
+import { cabeceraDeDescarga, nombreDeArchivo } from "@/lib/pdf/descarga";
 import PlanClasePdf from "@/components/clase/PlanClasePdf";
 
 /**
@@ -14,15 +15,6 @@ import PlanClasePdf from "@/components/clase/PlanClasePdf";
 
 // `@react-pdf/renderer` arma el PDF con APIs de Node: no corre en el runtime edge.
 export const runtime = "nodejs";
-
-/** Un nombre de archivo que no rompa en ningún sistema: sin barras ni comillas. */
-function nombreDeArchivo(curso: string, fecha: string) {
-  const limpio = curso
-    .replace(/["'\\/:*?<>|]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  return `Plan de clase - ${limpio} - ${fecha.replace(/\//g, "-")}.pdf`;
-}
 
 export async function GET(
   _request: Request,
@@ -46,8 +38,11 @@ export async function GET(
   return new Response(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      // Entre comillas porque el nombre lleva espacios.
-      "Content-Disposition": `attachment; filename="${nombreDeArchivo(plan.curso.nombre, fechaCorta)}"`,
+      // La fecha va con guiones: la barra es separador de carpetas y
+      // `nombreDeArchivo` la borra.
+      "Content-Disposition": cabeceraDeDescarga(
+        nombreDeArchivo(["Plan de clase", plan.curso.nombre, fechaCorta.replace(/\//g, "-")])
+      ),
       // El plan cambia cada vez que se toca la clase: nunca se cachea.
       "Cache-Control": "no-store",
     },

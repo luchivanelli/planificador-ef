@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import {
   CalendarRange,
   ClipboardList,
-  Download,
   GraduationCap,
   ListChecks,
   MapPin,
@@ -29,6 +28,7 @@ import FiltroInforme from "@/components/evaluacion/FiltroInforme";
 import ResumenAlumno from "@/components/evaluacion/ResumenAlumno";
 import TablaCurso from "@/components/evaluacion/TablaCurso";
 import { conComa } from "@/components/evaluacion/nota-visual";
+import BotonDescargarPdf from "@/components/ui/BotonDescargarPdf";
 import EmptyState from "@/components/ui/EmptyState";
 import PageHeader from "@/components/ui/PageHeader";
 import SectionCard from "@/components/ui/SectionCard";
@@ -244,17 +244,14 @@ export default async function EvaluacionCursoPage({
                     Ver curso completo
                   </Link>
                 )}
-                {/* Es un `<a>` y no un `Link` a propósito: descarga un archivo
-                    en vez de navegar a otra pantalla (igual que el plan de
-                    clase). */}
-                <a
+                <BotonDescargarPdf
                   href={`/evaluacion/${cursoId}/pdf?${busquedaDeInforme(valoresDelFiltro)}`}
-                  download
-                  className="button-primary"
-                >
-                  <Download className="h-4 w-4" />
-                  Guardar PDF
-                </a>
+                  descripcion={
+                    alumno
+                      ? `Es la evaluación de ${alumno.nombreCompleto} del período.`
+                      : `Es la evaluación de ${curso.nombre} del período.`
+                  }
+                />
               </>
             }
           >

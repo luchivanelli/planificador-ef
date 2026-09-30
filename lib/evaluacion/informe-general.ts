@@ -63,7 +63,6 @@ export type ClaseEvaluadaDelInforme = {
   rubrica: string;
   indicadores: { nombre: string; valor: number }[];
   promedio: number;
-  observacion: string | null;
 };
 
 export type AsistenciaDelInforme = {
@@ -108,13 +107,12 @@ export type AlumnoDelInforme = {
    * El seguimiento general del alumno (`Alumno.observaciones`), tal como se
    * carga desde la ficha del curso. Es contexto para leer la nota, no una parte
    * de ella: no entra en ninguna cuenta.
+   *
+   * `EvaluacionAlumno` tiene además una `observacionDocente` por rúbrica, pero
+   * ningún formulario la carga (el de evaluar la clase sólo puntúa
+   * indicadores), así que siempre está vacía y el informe no la mira.
    */
   seguimiento: string[];
-  /**
-   * Lo que la docente anotó al evaluar cada clase, junto en un solo lugar.
-   * También es contexto: no afecta la nota.
-   */
-  observacionesDeClase: { fechaTexto: string; rubrica: string; texto: string }[];
   /** Lo que conviene mirar antes de cerrar la nota. */
   alertas: string[];
 };
@@ -278,7 +276,6 @@ export async function informeGeneral(
           select: {
             alumnoId: true,
             rubricaId: true,
-            observacionDocente: true,
             detalles: { select: { indicadorId: true, valor: true } },
           },
         },
@@ -336,16 +333,13 @@ export async function informeGeneral(
   // cuenta: hay una sola evaluación por alumno y rúbrica, y un solo detalle por
   // indicador (lo garantizan las claves de `EvaluacionAlumno` y `EvaluacionDetalle`).
   const indicePorClase = clases.map((clase) => {
-    const porAlumnoYRubrica = new Map<
-      string,
-      { observacionDocente: string | null; valores: Map<string, number> }
-    >();
+    const porAlumnoYRubrica = new Map<string, Map<string, number>>();
 
     for (const evaluacion of clase.evaluaciones) {
-      porAlumnoYRubrica.set(`${evaluacion.alumnoId}:${evaluacion.rubricaId}`, {
-        observacionDocente: evaluacion.observacionDocente,
-        valores: new Map(evaluacion.detalles.map((d) => [d.indicadorId, d.valor])),
-      });
+      porAlumnoYRubrica.set(
+        `${evaluacion.alumnoId}:${evaluacion.rubricaId}`,
+        new Map(evaluacion.detalles.map((d) => [d.indicadorId, d.valor]))
+      );
     }
 
     return porAlumnoYRubrica;
@@ -359,8 +353,8 @@ export async function informeGeneral(
 
       for (const [indice, clase] of clases.entries()) {
         for (const rubrica of clase.rubricas) {
-          const evaluacion = indicePorClase[indice].get(`${alumno.id}:${rubrica.id}`);
-          if (!evaluacion) continue;
+          const valores = indicePorClase[indice].get(`${alumno.id}:${rubrica.id}`);
+          if (!valores) continue;
 
           // Sólo los indicadores que siguen en la rúbrica y tienen puntaje: si
           // se agregó uno después de evaluar, este alumno no lo tiene cargado y
@@ -369,7 +363,7 @@ export async function informeGeneral(
           const puntuados = rubrica.indicadores
             .map((indicador) => ({
               nombre: indicador.nombre,
-              valor: evaluacion.valores.get(indicador.id),
+              valor: valores.get(indicador.id),
             }))
             .filter((item): item is { nombre: string; valor: number } => item.valor !== undefined);
 
@@ -391,7 +385,6 @@ export async function informeGeneral(
             rubrica: rubrica.nombre,
             indicadores: puntuados,
             promedio: redondear(promedio(puntuados.map((p) => p.valor)) ?? 0, 2),
-            observacion: evaluacion.observacionDocente,
           });
         }
       }
@@ -458,17 +451,10 @@ export async function informeGeneral(
         clases: clasesEvaluadas,
         asistencia,
         nota,
-        // Observaciones y seguimiento: se juntan acá para mostrarlos, pero no
-        // pasaron por `calcularNota` ni por ningún promedio. Son el contexto
-        // que explica una nota, no un componente de la nota.
+        // El seguimiento se junta acá para mostrarlo, pero no pasó por
+        // `calcularNota` ni por ningún promedio: es el contexto que explica una
+        // nota, no un componente de la nota.
         seguimiento: itemsDeLista(alumno.observaciones),
-        observacionesDeClase: clasesEvaluadas
-          .filter((clase) => clase.observacion)
-          .map((clase) => ({
-            fechaTexto: clase.fechaTexto,
-            rubrica: clase.rubrica,
-            texto: clase.observacion!,
-          })),
         alertas,
       };
     })

@@ -3,6 +3,7 @@ import { requerirDocente } from "@/lib/auth";
 import { aFecha, aFechaLegible, diaEnZona } from "@/lib/schemas/common";
 import { informeGeneral, NOTA_APROBACION } from "@/lib/evaluacion/informe-general";
 import { leerParametros, type BusquedaInforme } from "@/lib/evaluacion/parametros";
+import { cabeceraDeDescarga, nombreDeArchivo } from "@/lib/pdf/descarga";
 import InformeGeneralPdf from "@/components/evaluacion/InformeGeneralPdf";
 
 /**
@@ -18,15 +19,6 @@ import InformeGeneralPdf from "@/components/evaluacion/InformeGeneralPdf";
 
 // `@react-pdf/renderer` arma el PDF con APIs de Node: no corre en el runtime edge.
 export const runtime = "nodejs";
-
-/** Un nombre de archivo que no rompa en ningún sistema: sin barras ni comillas. */
-function nombreDeArchivo(partes: string[]) {
-  const limpio = partes
-    .map((parte) => parte.replace(/["'\\/:*?<>|]/g, "").replace(/\s+/g, " ").trim())
-    .filter(Boolean)
-    .join(" - ");
-  return `${limpio}.pdf`;
-}
 
 export async function GET(
   request: Request,
@@ -70,12 +62,13 @@ export async function GET(
   return new Response(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      // Entre comillas porque el nombre lleva espacios.
-      "Content-Disposition": `attachment; filename="${nombreDeArchivo([
-        "Evaluacion general",
-        alumno ? alumno.nombreCompleto : informe.curso.nombre,
-        rango,
-      ])}"`,
+      "Content-Disposition": cabeceraDeDescarga(
+        nombreDeArchivo([
+          "Evaluacion general",
+          alumno ? alumno.nombreCompleto : informe.curso.nombre,
+          rango,
+        ])
+      ),
       // El informe se rehace con cada cambio de rúbrica o de asistencia: nunca
       // se cachea.
       "Cache-Control": "no-store",

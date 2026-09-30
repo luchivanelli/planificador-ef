@@ -567,38 +567,18 @@ function DetalleDelAlumno({
         </View>
       </View>
 
-      {(alumno.seguimiento.length > 0 || alumno.observacionesDeClase.length > 0) && (
+      {/* Sólo si hay algo cargado: un recuadro que dice "no hay nada" ocupa
+          media hoja para no aportar nada. */}
+      {alumno.seguimiento.length > 0 && (
         <View style={s.seccion}>
-          <Text style={s.seccionTitulo}>OBSERVACIONES Y SEGUIMIENTO · NO AFECTAN LA NOTA</Text>
+          <Text style={s.seccionTitulo}>SEGUIMIENTO Y OBSERVACIONES · NO AFECTAN LA NOTA</Text>
           <View style={s.caja}>
-            {alumno.seguimiento.length > 0 && (
-              <View>
-                <Text style={s.subtitulo}>SEGUIMIENTO DEL ALUMNO</Text>
-                {alumno.seguimiento.map((item, indice) => (
-                  <View key={`${indice}-${item}`} style={s.item}>
-                    <Text style={s.vineta}>•</Text>
-                    <Text style={s.itemTexto}>{item}</Text>
-                  </View>
-                ))}
+            {alumno.seguimiento.map((item, indice) => (
+              <View key={`${indice}-${item}`} style={[s.item, indice === 0 ? { marginTop: 0 } : {}]}>
+                <Text style={s.vineta}>•</Text>
+                <Text style={s.itemTexto}>{item}</Text>
               </View>
-            )}
-
-            {alumno.observacionesDeClase.length > 0 && (
-              <View style={alumno.seguimiento.length > 0 ? { marginTop: 7 } : {}}>
-                <Text style={s.subtitulo}>OBSERVACIONES AL EVALUAR</Text>
-                {alumno.observacionesDeClase.map((observacion, indice) => (
-                  <View key={`${indice}-${observacion.fechaTexto}`} style={s.item}>
-                    <Text style={s.vineta}>•</Text>
-                    <Text style={s.itemTexto}>
-                      <Text style={s.nombre}>
-                        {observacion.fechaTexto} · {observacion.rubrica}:{" "}
-                      </Text>
-                      {observacion.texto}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
+            ))}
           </View>
         </View>
       )}

@@ -178,72 +178,35 @@ export default function ResumenAlumno({
 
       <SectionCard
         icono={FileText}
-        titulo="Observaciones y seguimiento"
-        subtitulo="Contexto para leer la nota. Nada de esto entra en el cálculo."
+        titulo="Seguimiento y observaciones"
+        subtitulo="Lo cargado en la ficha del alumno. Es contexto para leer la nota, no entra en el cálculo."
         accion={<span className="pill">No afecta la nota</span>}
       >
-        <div className="space-y-4">
-          <div>
-            <p className="section-title mb-2">Seguimiento del alumno</p>
-            {alumno.seguimiento.length === 0 ? (
-              <p className="text-sm text-ink-500">
-                Sin seguimiento cargado.{" "}
-                <Link
-                  href={`/cursos/${informe.curso.id}`}
-                  className="link-brand text-sm align-baseline"
+        {alumno.seguimiento.length === 0 ? (
+          <p className="text-sm text-ink-500">
+            Sin seguimiento cargado.{" "}
+            <Link href={`/cursos/${informe.curso.id}`} className="link-brand align-baseline text-sm">
+              Cargalo desde la ficha del curso
+            </Link>
+            .
+          </p>
+        ) : (
+          <ListaScroll alto="chica" etiqueta="Seguimiento y observaciones del alumno">
+            <ul className="space-y-1.5">
+              {alumno.seguimiento.map((item, indice) => (
+                <li
+                  key={`${indice}-${item}`}
+                  className="flex items-start gap-2 break-words rounded-control border border-linea bg-ink-50/60 px-3 py-2 text-sm text-ink-700"
                 >
-                  Cargalo desde la ficha del curso
-                </Link>
-                .
-              </p>
-            ) : (
-              <ListaScroll alto="chica" etiqueta="Seguimiento general del alumno">
-                <ul className="space-y-1.5">
-                  {alumno.seguimiento.map((item, indice) => (
-                    <li
-                      key={`${indice}-${item}`}
-                      className="flex items-start gap-2 break-words rounded-control border border-linea bg-ink-50/60 px-3 py-2 text-sm text-ink-700"
-                    >
-                      <span aria-hidden="true" className="mt-0.5 text-brand-500">
-                        •
-                      </span>
-                      <span className="min-w-0">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </ListaScroll>
-            )}
-          </div>
-
-          <div>
-            <p className="section-title mb-2">
-              Observaciones al evaluar ({alumno.observacionesDeClase.length})
-            </p>
-            {alumno.observacionesDeClase.length === 0 ? (
-              <p className="text-sm text-ink-500">
-                No anotaste observaciones al evaluar las clases de este período.
-              </p>
-            ) : (
-              <ListaScroll alto="chica" etiqueta="Observaciones anotadas al evaluar cada clase">
-                <ul className="space-y-2">
-                  {alumno.observacionesDeClase.map((observacion, indice) => (
-                    <li
-                      key={`${indice}-${observacion.fechaTexto}`}
-                      className="rounded-control border border-linea bg-ink-50/60 px-3 py-2"
-                    >
-                      <p className="text-xs font-semibold text-ink-500">
-                        {observacion.fechaTexto} · {observacion.rubrica}
-                      </p>
-                      <p className="mt-0.5 break-words text-sm text-ink-700">
-                        {observacion.texto}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </ListaScroll>
-            )}
-          </div>
-        </div>
+                  <span aria-hidden="true" className="mt-0.5 text-brand-500">
+                    •
+                  </span>
+                  <span className="min-w-0">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </ListaScroll>
+        )}
       </SectionCard>
 
       <SectionCard
@@ -308,12 +271,6 @@ export default function ResumenAlumno({
                     </li>
                   ))}
                 </ul>
-
-                {clase.observacion && (
-                  <p className="mt-3 break-words rounded-control border border-linea bg-ink-50 px-3 py-2 text-xs text-ink-600">
-                    {clase.observacion}
-                  </p>
-                )}
 
                 <Link
                   href={`/cursos/${informe.curso.id}/clase/${clase.claseId}/evaluacion`}

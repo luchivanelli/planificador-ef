@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   CalendarRange,
   ChevronRight,
+  ClipboardCheck,
   ClipboardList,
   Clock,
   Layers,
@@ -16,6 +17,7 @@ import { db } from "@/lib/db";
 import { requerirDocente } from "@/lib/auth";
 import AddAlumnoClient from "@/components/alumno/AddAlumnoClient";
 import AlumnosSearch from "@/components/alumno/AlumnosSearch";
+import BotonDescargarPdf from "@/components/ui/BotonDescargarPdf";
 import DiagnosticoGrupalForm from "@/components/curso/DiagnosticoGrupalForm";
 import EditarCursoForm from "@/components/curso/EditarCursoForm";
 import { NIVELES, TURNOS } from "@/lib/types";
@@ -210,6 +212,22 @@ export default async function CursoPage({
         <AlumnosSearch alumnos={alumnos} cursoId={cursoId} />
         <AddAlumnoClient cursoId={cursoId} />
       </SectionCard>
+
+      <SectionCard
+        icono={ClipboardCheck}
+        titulo="Asistencia"
+        subtitulo="Descargá la planilla completa: todas las clases con lista pasada, todos los alumnos y el total de faltas de cada uno."
+        // Sin cuerpo: la tarjeta es el botón y lo que explica qué trae el
+        // archivo. `accionBloque` lo estira a lo ancho en el celular.
+        accionBloque
+        accion={
+          <BotonDescargarPdf
+            href={`/cursos/${cursoId}/asistencia/pdf`}
+            etiqueta="Descargar asistencia"
+            descripcion={`Es la planilla de asistencia de ${curso.nombre}.`}
+          />
+        }
+      />
 
       <SectionCard
         icono={ClipboardList}

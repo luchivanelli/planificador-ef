@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import BotonDescargarPdf from "@/components/ui/BotonDescargarPdf";
 
 /**
  * Barra de la vista previa del plan: no sale en el papel (la apaga `@media print`).
  *
- * "Guardar PDF" apunta al route handler que arma el archivo en el servidor, que
- * lo devuelve con `Content-Disposition: attachment`: el navegador lo baja solo,
- * sin diálogo de impresión de por medio. Es un `<a>` y no un `Link` a propósito,
- * porque descarga un archivo en vez de navegar a otra pantalla.
+ * "Guardar PDF" pide el archivo al route handler que lo arma en el servidor.
+ * Mientras tanto el botón queda en "generando" y al terminar avisa que se
+ * guardó: el PDF tarda lo suyo en armarse y sin eso no pasaba nada visible al
+ * tocarlo (ver `BotonDescargarPdf`).
  */
 export default function BarraPlan({
   volverA,
@@ -24,10 +25,11 @@ export default function BarraPlan({
           <ArrowLeft className="h-4 w-4" />
           Volver a la clase
         </Link>
-        <a href={descargarEn} download className="plan-boton">
-          <Download className="h-4 w-4" />
-          Guardar PDF
-        </a>
+        <BotonDescargarPdf
+          href={descargarEn}
+          className="plan-boton"
+          descripcion="Es el plan de esta clase, tal como se ve en la hoja."
+        />
       </div>
     </div>
   );
